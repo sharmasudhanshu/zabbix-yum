@@ -28,7 +28,7 @@ def pupagent(server="ip-172-31-1-5.ap-southeast-1.compute.internal"):
     
     
   ###################
-  apt-get puppet agent ,
+  ##apt-get puppet agent ,
   
   def pup(server="pmaster"):
     """Configure slaves [server], default: puppetmaster.local"""
