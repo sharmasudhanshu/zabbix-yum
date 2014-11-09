@@ -1,0 +1,23 @@
+exec { "run command only  once":
+    command => "/usr/sbin/useradd test",
+    unless  => "/bin/grep  -c testeder  /etc/passwd",  ### see if user test exits,if yes , donot execute command 
+}
+
+exec { "run_account_purger":
+    command => "/usr/sbin/useradd testme",
+    onlyif => "/bin/grep  -c test  /etc/passwd", ### see if user test  exists , then only exec  command
+	
+}
+
+##so if you have  apache installed , use  unless to check apache is installed or not
+
+
+## below is how to exec command from other user,
+
+exec {'login_pgsql':
+  user => postgres,
+  command => "/usr/lib/postgresql/9.3/bin/initdb -D /usrdata/pgsql/data/",
+  path => "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+}
+
+
