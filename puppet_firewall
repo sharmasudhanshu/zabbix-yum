@@ -1,0 +1,126 @@
+
+gem install puppet-module
+apt-get install iptables-persistent  ## in ubuntu to work
+cat /etc/iptables/rules.v4
+##############################################################################################################################################  
+firewall
+https://sysadmincasts.com/episodes/18-managing-iptables-with-puppet
+puppet module install puppetlabs-firewall
+
+then create files as below in a new module  my_fw
+
+file /etc/puppet/modules/my_fw/manifests/init.pp
+class my_fw {
+    resources { "firewall":
+        purge => true
+    }
+    Firewall {
+        before  => Class['my_fw::post'],
+        require => Class['my_fw::pre'],
+    }
+    class { ['my_fw::pre', 'my_fw::post']: }
+    class { 'firewall': }
+}
+
+file /etc/puppet/modules/my_fw/manifests/pre.pp
+class my_fw::pre {
+  Firewall {
+    require => undef,
+  }
+
+  # Default firewall rules
+  firewall { '000 accept all icmp':
+    proto   => 'icmp',
+    action  => 'accept',
+  }->
+  firewall { '001 accept all to lo interface':
+    proto   => 'all',
+    iniface => 'lo',
+    action  => 'accept',
+  }->
+  firewall { '002 accept related established rules':
+    proto   => 'all',
+    state   => ['RELATED', 'ESTABLISHED'],
+    action  => 'accept',
+  }->
+  firewall { '003 allow SSH access':
+    port   => 22,
+    proto  => tcp,
+    action => accept,
+  }
+}
+
+
+file /etc/puppet/modules/my_fw/manifests/post.pp
+
+class my_fw::post {
+  firewall { '999 drop all':
+    proto   => 'all',
+    action  => 'drop',
+    before  => undef,
+  }
+}
+
+
+######################################################################################################################################
+
+
+############################################################################################################################################
+zabbix  port 10050  example , put it inside that node
+
+  # Enable the port for zabbix agent
+  firewall { '202 allow communication with zabbix server':
+    port    => [10050],
+    proto   => tcp,
+    action  => accept,
+  }
+### or  better rules are for zabbix-agent port 10050 
+firewall { '10050  allow zabbix-agent access':
+    port   => [10050],
+    proto  => "tcp",
+    action => "accept",
+ }
+firewall { '10050  open port 111':
+    dport => 10050
+  }
+  
+##########################################################################################################################################################
+some  more  examples ,
+
+
+firewall { "000 accept all icmp requests":
+  proto  => "icmp",
+  action => "drop",
+}
+
+#### delete all rules ,
+ resources { "firewall":
+    purge   => true
+  }
+  
+firewall { '100 allow http and https access':
+    port   => [80, 443],
+    proto  => tcp,
+    action => allow,
+  }
+firewall { '80  open port 111':
+    dport => 80
+  }  
+  
+ firewall { '443  open port 111':
+    dport => 443
+  } 
+firewall { '100 allow http and https access':
+    port   => [80, 443],
+    proto  => tcp,
+    action => drop,
+  }
+
+
+firewall { "000 drop all icmp requests":
+  proto  => "icmp",
+  action => "drop",
+}
+
+
+  
