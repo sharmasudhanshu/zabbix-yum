@@ -20,4 +20,10 @@ exec {'login_pgsql':
   path => "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
 }
 
+### exec  command as non-root  user
 
+exec {'login_pgsql':
+  user => postgres,
+  command => "/usr/lib/postgresql/9.3/bin/initdb -D /usrdata/pgsql/data/",
+  path => "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+}
