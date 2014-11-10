@@ -54,3 +54,36 @@ def csign(agent="--all"):
     sudo("puppet cert --sign %s" % agent)
     
     
+
+
+fab fabric copy & http proxy example apt get & wget
+Actions  
+sudhanshu sharma reliance   05-11-2014   Flag this message  
+To: Sudhanshu.M.Sharma@ril.com, sharmasudhanshu@hotmail.com, Vedprakash.Nimbalkar@ril.com, Santosh.Ku.Yadav@ril.com
+
+ 
+
+def scopy(localpath,remotepath):
+
+#    sudo("rm -rf /etc/init.d/zabbix_agentd")
+
+    put(localpath,remotepath,use_sudo=True)
+
+ 
+
+###fab scopy:/root/proxy.txt,/tmp/proxy.txt
+
+def abc():
+
+    sudo(' wget --execute=https_proxy=http://10.135.80.164:8678   https://apt.puppetlabs.com/puppetlabs-release-precise.deb')
+
+    sudo('dpkg -i puppetlabs-release-precise.deb')
+
+    sudo('bash -c \'http_proxy="http://10.135.80.164:8678/" apt-get update\'')
+
+    sudo('bash -c \'http_proxy="http://10.135.80.164:8678/" apt-get -y install puppet\'')
+
+ 
+
+##fab -H linuxbox  abc
+
