@@ -1,0 +1,164 @@
+
+#! /bin/sh
+#########  zabbix init.d service starts
+### BEGIN INIT INFO
+
+# Provides:          zabbix-agent
+
+# Required-Start:    $remote_fs $network
+
+# Required-Stop:     $remote_fs
+
+# Default-Start:     2 3 4 5
+
+# Default-Stop:      0 1 6
+
+# Short-Description: Start zabbix-agent daemon
+
+### END INIT INFO
+
+ 
+
+set -e
+
+ 
+
+NAME=zabbix_agentd
+
+DAEMON=/usrdatazbx/zabbixagent-2.2.5/sbin/zabbix_agentd     ####   sbin path  after installing from  tar ball     , set this as per new install
+
+DESC="Zabbix agent"
+
+ 
+
+test -x $DAEMON || exit 0
+
+ 
+
+DIR=/usrdatazbx/run/zabbix       ### set this as per new install 
+
+PID=/usrdatazbx/zabbixagent-2.2.5/pid/zabbix_agentd.pid          ### set this as per new install
+
+ 
+
+RETRY=15
+
+ 
+
+if test ! -d "$DIR"; then
+
+  mkdir "$DIR"
+
+  chown -R zabbix:zabbix "$DIR"
+
+fi
+
+ 
+
+export PATH="${PATH:+$PATH:}/usr/sbin:/sbin:/usrdatazbx/zabbixagent-2.2.5/sbin"         ### set this as per new install
+
+ 
+
+# define LSB log_* functions.
+
+. /lib/lsb/init-functions
+
+ 
+
+case "$1" in
+
+  start)
+
+    log_daemon_msg "Starting $DESC" "$NAME"
+
+        start-stop-daemon --oknodo --start --pidfile $PID --exec $DAEMON >/dev/null 2>&1
+
+    case "$?" in
+
+        0) log_end_msg 0 ;;
+
+        *) log_end_msg 1; exit 1 ;;
+
+    esac
+
+        ;;
+
+  stop)
+
+    log_daemon_msg "Stopping $DESC" "$NAME"
+
+        start-stop-daemon --oknodo --stop --pidfile $PID --retry $RETRY
+
+    case "$?" in
+
+        0) log_end_msg 0 ;;
+
+        *) log_end_msg 1; exit 1 ;;
+
+    esac
+
+        ;;
+
+  status)
+
+    status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
+
+    ;;
+
+  restart|force-reload)
+
+        $0 stop
+
+        $0 start
+
+        ;;
+
+  *)
+
+    echo "Usage: /etc/init.d/$NAME {start|stop|restart|force-reload}" >&2
+
+        exit 1
+
+        ;;
+
+esac
+
+ 
+
+ 
+
+exit 0
+
+ 
+#########  zabbix init.d service file ends
+ 
+
+#env.hosts = ["ubuntu@10.135.80.209","ubuntu@10.135.80.210","ubuntu@10.135.80.211","ubuntu@10.135.80.213","ubuntu@10.135.80.214","ubuntu@10.135.80.215","ubuntu@10.135.80.216","ubuntu@10.135.80.217","ubuntu@10.135.80.218"]   ### puppet server keys login
+
+env.hosts = ["ubuntu@10.135.80.213"]
+
+env.key_filename = '/opt/test/jd-admin-without-db.pem'
+
+ 
+
+ 
+
+ 
+
+def abc():
+
+    sudo(' wget --execute=https_proxy=http://10.135.80.164:8678   https://apt.puppetlabs.com/puppetlabs-release-precise.deb')
+
+    sudo('dpkg -i puppetlabs-release-precise.deb')
+
+    sudo('bash -c \'http_proxy="http://10.135.80.164:8678/" apt-get update\'')
+
+    sudo('bash -c \'http_proxy="http://10.135.80.164:8678/" apt-get -y install puppet\'')
+
+ 
+
+##fab -H linuxbox  abc
+
+ 
+
+ 
