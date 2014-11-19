@@ -41,4 +41,14 @@ git clone git@10.0.0.21:gitolite-admin
 cd   /home/terry/gitolite-admin
 
 update file conf/gitolite.conf
+### add a  repo & user diffenert from admin user  john , as below
+repo    test
+        RW+     =   terry
+
+
+git config --global user.email "john@ril.com"
+git config --global user.name "john"
+git commit -a -m "adding repo test"
+
+git push
 
