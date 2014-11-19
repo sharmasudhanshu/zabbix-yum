@@ -1,0 +1,44 @@
+apt-get install git    ### on git server & remote server
+apt-get install gitolite   ### on git server
+sudo adduser --system --group --shell /bin/bash --disabled-password git  ### on git server
+
+sudo adduser --system --group --shell /bin/bash --disabled-password john   ### on remote server,
+### on remote host as any user ,  generate keys , say for user john
+ssh-keygen -t rsa  
+
+### now on git server  ,  execute  command , gl-setup /tmp/john.pub  ,with  john's public key
+sudo su - git
+git@network:~$ gl-setup /tmp/john.pub    ### on git,gitolite server
+The default settings in the rc file (/home/git/.gitolite.rc) are fine for most
+people but if you wish to make any changes, you can do so now.
+
+hit enter...                           ### press enter
+
+Select an editor.  To change later, run 'select-editor'.
+  1. /bin/ed
+  2. /bin/nano        <---- easiest
+  3. /usr/bin/vim.basic                                ###select editor  & save file conf/gitolite.conf
+  4. /usr/bin/vim.tiny
+
+Choose 1-4 [2]: 3
+creating gitolite-admin...
+Initialized empty Git repository in /home/git/repositories/gitolite-admin.git/
+creating testing...
+Initialized empty Git repository in /home/git/repositories/testing.git/
+[master (root-commit) 264d4bc] start
+ 2 files changed, 6 insertions(+)
+ create mode 100644 conf/gitolite.conf
+ create mode 100644 keydir/john.pub
+ 
+#### on git server , add keys in below way
+so the correct way is to append   below line  in file  /home/git/.ssh/authorized_keys , for all users on gitolite server
+command="/usr/share/gitolite/gl-auth-command git-admin",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty
+
+
+git clone git@10.0.0.21:gitolite-admin 
+
+
+cd   /home/terry/gitolite-admin
+
+update file conf/gitolite.conf
+
