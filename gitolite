@@ -1,12 +1,12 @@
-apt-get install git    ### on git server & remote server
-apt-get install gitolite   ### on git server
-sudo adduser --system --group --shell /bin/bash --disabled-password git  ### on git server
+apt-get install git    ### on  remote server
+apt-get install gitolite   ### on git/gitolite server
+sudo adduser --system --group --shell /bin/bash --disabled-password git  ### on git/gitolite server
 
 sudo adduser --system --group --shell /bin/bash --disabled-password john   ### on remote server,
 ### on remote host as any user ,  generate keys , say for user john
-ssh-keygen -t rsa  
+ssh-keygen -t rsa     ###  copy public keys to git/gitolite server /tmp/john.pub
 
-### now on git server  ,  execute  command , gl-setup /tmp/john.pub  ,with  john's public key
+### now on git/gitolite  server  ,  execute  command , gl-setup /tmp/john.pub  ,with  john's public key
 sudo su - git
 git@network:~$ gl-setup /tmp/john.pub    ### on git,gitolite server
 The default settings in the rc file (/home/git/.gitolite.rc) are fine for most
@@ -29,13 +29,28 @@ Initialized empty Git repository in /home/git/repositories/testing.git/
  2 files changed, 6 insertions(+)
  create mode 100644 conf/gitolite.conf
  create mode 100644 keydir/john.pub
- 
-#### on git server , add keys in below way
-so the correct way is to append   below line  in file  /home/git/.ssh/authorized_keys , for all users on gitolite server
+
+
+### for user john on remote server , 
+su - john
+git clone git@10.0.0.36:gitolite-admin   ###this will clone  gitolite-admin, now you can modify/update & push to git server
+
+
+####now  say a user terry exists on a remote server with public key /home/terry/.ssh/id_rsa.pub 
+#### on git server , in file  /home/git/.ssh/authorized_keys, add remote user terry's  keys in below way
+so the correct way is to append   below line  in file  /home/git/.ssh/authorized_keys , for all users on git/gitolite server
 command="/usr/share/gitolite/gl-auth-command git-admin",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty
 
+example
 
-git clone git@10.0.0.21:gitolite-admin 
+command="/usr/share/gitolite/gl-auth-command john",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3jxVhugaP5FY89GR0yBZEwDz4kxZKdarg5q1AIPdc8Cr0Fpu+894aErQMYhMmJ+IRrN0Ns3Jv9uJeWzdzLFNX+3Z9fq+Y9ZbeCVC3z5R6lfhmwYmDbfSnBuZ/8hd3gBGaoTu1X8Mtba627g2hL764ScHMHe7HsPf7XhpUz2gp6i6e5sTpspyjbsJDGGAD9lZbbmU7/f6VeFX/RIpdRE00v3xo/DTKZwqBAONE28PwJbiRlDkVlP0fWGnZffm7Zd39dmw0QTCEViByxmcuiCMXyvtbHQs4MX6eXikb/yew6GMWwg8U3oPjOONieq6RKmzbc4rei/+UPRinul6vhkal terry@anshu
+# gitolite start
+command="/usr/share/gitolite/gl-auth-command john",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDmTVYH691ikZQg4KP9MmFJswNTBUzrvOketui9SVY9Ej0CoPR4kzbE+mvM84CN70Eh+bYYSAScPl/mc8k5oPkrY0QTi7y0jzhM634IePfHyx7e2v/KTh+e4rh+OZmZTDcHiJUoJer8HjR+/4VM5qvkuG8Vcinw8BoDTVTepB7+chfKOsjXFu9SbbkJpJTUYeZL/mpEVUvrB5txMGpflOLdz3cx8E1ZMAypg6cO3ZT4BrZ9q1CmnlruM2lScrEGAv35cdnc1zEi5EZ9OBkgGG/woXn+Rw8AIU/oC2iPsnx1cXkT4TtowMRpj4wG2Ys9xZ4OU4fa7uNlvXzuIHMkEZWx john@anshu
+# gitolite end
+
+##After terry's appending key in git/gitolite server,clone  gitolite repository,as user terry
+
+git clone git@10.0.0.36:gitolite-admin
 
 
 cd   /home/terry/gitolite-admin
@@ -46,9 +61,9 @@ repo    test
         RW+     =   terry
 
 
-git config --global user.email "john@ril.com"
-git config --global user.name "john"
-git commit -a -m "adding repo test"
+git config --global user.email "terry@ril.com"
+git config --global user.name "terry"
+git commit -a -m "adding repo test"  ## in dir  /home/terry/gitolite-admin
 
 git push
 
