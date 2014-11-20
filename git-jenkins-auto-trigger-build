@@ -2,6 +2,7 @@ install jenkins  & git
 Add git plug in jenkins,
 
 tell jenkins , where to find git  /usr/bin/git  , in Jenkins : system manager  --->  system setting ---->Git ：
+make a freestyle job in  jenkins  testgit ,
 
 jenkins server  ,  git repo server   ,  git user server(where developer will work)
 now  share keys from git user server & jenkins server(jenkins user) to  git repo  (for git user)   , ssh-keygen  ssh-copy-id -i ~/.ssh/id_rsa.pub gituser@anshu
@@ -36,7 +37,7 @@ curl http://network:8080/job/testgit/build?delay=0sec    ### change job name (he
   
   
 #######################################################################################################################################   
-Jenkins  , what to do
+Jenkins  , what to do, in freestyle job testgit 
 ### select   git & give repository url  as below , Repository URL
 
 ssh://gituser@anshu/home/gituser/test
@@ -44,10 +45,10 @@ exec shell comamnds
 sudo rsync -avr  /var/lib/jenkins/jobs/testgit/workspace/* /var/www/html/
 sudo chown -R  www-data:www-data /var/www/html/
 
-use  visudo , as below
+###to allow sudo for jenkins user , use  visudo , as below , on jenkins server 
 jenkins ALL=(ALL)NOPASSWD: /bin/chown, /usr/bin/rsync
 
-### to trigger build from  curl  
+### to trigger build from  curl  , this we are not using here , we will trigger build from git push & post-receive hook
 
 post commit  ,  build  trigger  url 
 curl http://foo:8080/job/testgit/build?delay=0sec     ### mention  hostname , port &  jobname correctly e.g.  foo,8080, testgit 
