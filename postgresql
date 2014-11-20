@@ -1,0 +1,41 @@
+sudo -u postgres psql postgres
+\password postgres  ### to set root passwd
+
+CREATE USER demo
+GRANT root To demo
+
+postgres-# createdb mydb
+postgres=# GRANT ALL PRIVILEGES ON DATABASE mydb TO anshu
+postgres-# create table employee (Name char(20),Dept char(20),jobTitle char(20))
+postgres-# INSERT INTO employee VALUES ('Fred Flinstone','Quarry Worker','Rock Digger')
+postgres-# INSERT INTO employee VALUES ('Wilma Flinstone','Finance','Analyst')
+postgres-# INSERT into employee values ('Barney Rubble','Sales','Neighbor')
+postgres-# SELECT * from employee
+
+
+CREATE ROLE jam  WITH CREATEDB CREATEROLE  LOGIN PASSWORD  'bar' VALID UNTIL '2025-01-01';
+
+CREATE DATABASE jam;
+ALTER DATABASE jam  OWNER TO jam;
+psql -U jam -d jam
+
+CREATE TABLE demo ( name varchar(25),id serial,start_date date);
+jam=>create table employee (Name char(20),Dept char(20),jobTitle char(20));
+jam=> INSERT INTO employee VALUES ('Fred Flinstone','Quarry Worker','Rock Digger');
+jam=> INSERT INTO employee VALUES ('Wilma Flinstone','Finance','Analyst');
+jam=> INSERT into employee values ('Barney Rubble','Sales','Neighbor');
+jam=> commit;
+WARNING:  there is no transaction in progress
+COMMIT
+jam=> select * from employee;
+
+ psql -U jam -d jam  -h localhost
+ psql -U jam -d jam  -h localhost -p 5432
+ 
+ jam
+ localhost
+ /var/log/postgresql
+ 5432
+ jam
+ 
+ 
