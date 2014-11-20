@@ -1,0 +1,63 @@
+install jenkins  & git
+Add git plug in jenkins,
+
+tell jenkins , where to find git  /usr/bin/git  , in Jenkins : system manager  --->  system setting ---->Git ：
+
+jenkins server  ,  git repo server   ,  git user server(where developer will work)
+now  share keys from git user server & jenkins server(jenkins user) to  git repo  (for git user)   , ssh-keygen  ssh-copy-id -i ~/.ssh/id_rsa.pub gituser@anshu
+
+
+sudo adduser --system --group --shell /bin/bash --disabled-password git
+     mkdir foo     ###create a repo on git server ,say foo
+	 cd foo
+     git init   ### now add  files 
+	 git add * 
+	 git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+  git commit -a -m "adding index.html file"
+  
+  #### now  from  git user server  , checkout repo  foo  , add new lines or files (/home/git/foo/  repo path), but complete below steps for auto trigger
+  git clone git@logagent:foo
+  
+
+  
+for auto trigger of build add script in git hooks, on  git  server , in you repo
+/home/git/foo/.git/hooks/post-receive
+ #!/bin/sh
+curl http://network:8080/job/testgit/build?delay=0sec    ### change job name (here testgit)  & chmod 755 
+
+ ### on git  server ,in your repo ,
+  in /home/git/foo/.git/config add lines
+  [receive]
+   denycurrentbranch = false
+
+   &   git config --global push.default simple  on  git user server to push in a bare repo,
+   
+  
+  
+#######################################################################################################################################   
+Jenkins  , what to do
+### select   git & give repository url  as below , Repository URL
+
+ssh://gituser@anshu/home/gituser/test
+exec shell comamnds
+sudo rsync -avr  /var/lib/jenkins/jobs/testgit/workspace/* /var/www/html/
+sudo chown -R  www-data:www-data /var/www/html/
+
+use  visudo , as below
+jenkins ALL=(ALL)NOPASSWD: /bin/chown, /usr/bin/rsync
+
+### to trigger build from  curl  
+
+post commit  ,  build  trigger  url 
+curl http://foo:8080/job/testgit/build?delay=0sec     ### mention  hostname , port &  jobname correctly e.g.  foo,8080, testgit 
+curl http://foo:8080/job/testgit/build?delay=0sec
+
+
+https://USERNAME:PASSWORD@jenkins.example.com/github-webhook/   ### if  user authentication is required
+  
+#######################################################################################################################################    
+
+Now  add file, modify file in remote repo on git user server & commit & push to git , it will trigger build, & keep it in apache docroot , seen your website 
+changes in browser,
+
