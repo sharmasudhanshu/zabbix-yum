@@ -1,0 +1,84 @@
+.bashrc
+#HADOOP VARIABLES START
+export HADOOP_HOME=/usr/local/hadoop
+export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+export HADOOP_INSTALL=/usr/local/hadoop
+export PATH=$PATH:$HADOOP_INSTALL/bin
+export PATH=$PATH:$HADOOP_INSTALL/sbin
+export HADOOP_MAPRED_HOME=$HADOOP_INSTALL
+export HADOOP_COMMON_HOME=$HADOOP_INSTALL
+export HADOOP_HDFS_HOME=$HADOOP_INSTALL
+export YARN_HOME=$HADOOP_INSTALL
+export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_INSTALL/lib/native
+export HADOOP_OPTS="-Djava.library.path=$HADOOP_INSTALL/lib"
+#HADOOP VARIABLES END
+export PIG_HOME=/usr/lib/pig
+export PATH=$PATH:$PIG_HOME/bin
+export PIG_CLASSPATH=/usr/local/hadoop/etc/hadoop
+
+ Downloads  pig tar file
+Unzip the tar file.
+$ tar -xvf pig-0.11.1.tar.gz
+Create directory
+$ sudo mkdir /usr/lib/pig
+move pig-0.11.1 to pig
+$ mv pig-0.11.1 /usr/lib/pig/
+Set the PIG_HOME path in bashrc file
+To open bashrc file use this command
+
+$ gedit ~/.bashrc
+ In bashrc file append the below 2 statements
+export PIG_HOME=/usr/lib/pig
+export PATH=$PATH:$PIG_HOME/bin
+export PIG_CLASSPATH=/usr/local/hadoop/etc/hadoop
+#################################################################################################################################################
+mkdir: `/usr/local/hadoop_store/hdfs/namenode/movies': No such file or directory
+
+resolved
+
+Hadoop by default access /user/YOURLOGINNAME
+
+when we try to ls a directory
+
+So just do the following
+
+hadoop fs -mkdir /user
+hadoop fs -mkdir /user/YOURLOGINNAME
+
+Then do hadoop fs -ls
+
+It would work, Thanks for reading :)
+#################################################################################################################################################
+movies = LOAD '/home/hduser/pig/myscripts/movies_data.csv' USING PigStorage(',') as (id,name,year,rating,duration);
+
+hadoop fs -mkdir /user
+hadoop fs -mkdir /user/hadoop
+hadoop fs -ls /user/hadoop
+hadoop fs -put movies_data.csv  /user/hadoop/dir1/movies_data.csv  ### movies.csv must be present in local dir
+hadoop fs -ls /user/hadoop/dir1/movies_data.csv
+-rw-r--r--   1 hadoop supergroup        347 2014-11-20 21:31 /user/hadoop/dir1/movies_data.csv
+
+###After uploading file in hdfs as above  you can process it as , below using pig
+Connection Error in Apache Pig
+Error     Retrying connect to server: 0.0.0.0/0.0.0.0:10020 hadoop  comes   
+run  
+mr-jobhistory-daemon.sh start historyserver
+This command starts up the job history server. Now if we enter 'jps', we can see that the JobHistoryServer is running and my Pig jobs 
+no longer waste time trying to connect to the server.
+
+movies = LOAD '/user/hadoop/dir1/movies_data2.csv' USING PigStorage(',') as (id,name,year,rating,duration);
+DUMP movies;
+movies_greater_than_four = FILTER movies BY (float)year>1990;
+DUMP movies_greater_than_four;
+store movies_greater_than_four into '/user/hduser/movies_greater_than_five';
+
+
+Input(s):
+Successfully read 10 records (728 bytes) from: "/user/hadoop/dir1/movies_data.csv"
+
+Output(s):
+Successfully stored 0 records in: "/user/hduser/movies_greater_than_four"
+
+hadoop fs -get /user/hduser/movies_greater_than_four3 . 
+
+
