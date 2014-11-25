@@ -1,3 +1,6 @@
+first apt-get install python-pip  or  yum install python-pip
+pip install zabbix-api  ### use https_proxy not http proxy
+
 #!/usr/bin/python
 
 
