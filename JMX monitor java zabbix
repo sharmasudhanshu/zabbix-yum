@@ -1,0 +1,74 @@
+apt-get update
+
+apt-get install openjdk-7-jdk
+update-alternatives --config java 
+export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
+
+apt-get install tomcat7
+
+Now  add  below lines  in set-env.sh  or export in JAVA_OPTS variable,/etc/default/tomcat7
+
+-Dcom.sun.management.jmxremote\
+-Dcom.sun.management.jmxremote.port=12345\
+-Dcom.sun.management.jmxremote.authenticate=false\
+-Dcom.sun.management.jmxremote.ssl=false\
+
+for  # Enabling JMX
+JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote"
+JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote.port=12345"
+JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
+JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote.ssl=false"
+
+### restart tomcat
+
+First install  zabbix-java-gateway_2.2.0-1+precise_amd64.deb  package  say on server 10.0.0.31 & /etc/init.d/zabbix-java-gateway 
+
+LISTEN_PORT=10052
+PID_FILE="/var/run/zabbix/zabbix_java_gateway.pid"
+
+If  gives error  as below ,  
+/etc/init.d/zabbix-java-gateway start
+ * Starting Zabbix java gateway zabbix_java_gateway                                                                                                                     start-stop-daemon: --start needs --exec or --startas
+Try 'start-stop-daemon --help' for more information.
+
+
+to fix this   chnage  line in file  , from
+start-stop-daemon --start -b -m -u zabbix -g zabbix -c zabbix -p $PID_FILE -- $DAEMON_ARGS
+ to  
+start-stop-daemon --start -b -m -u zabbix -g zabbix -c zabbix -p $PID_FILE --exec $JAVA -- $DAEMON_ARGS  
+### --exec $JAVA is extra
+
+
+
+/etc/zabbix/zabbix_server.conf
+JavaGateway=10.0.0.31
+JavaGatewayPort=10052
+StartJavaPollers=6
+
+### comment any entry like bleow in 
+
+127.0.1.1 anshu
+
+
+
+
+ON java jmx monitored host , in /etc/hosts  , no 127.0.0.1  or  127.0.1.1 entries
+10.0.0.31  anshu
+
+java -jar cmdline-jmxclient-0.10.3.jar opennms:OpenNMS 10.0.0.35:8999 java.lang:type=OperatingSystem ProcessCpuTime  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+l
