@@ -1,0 +1,155 @@
+##hadoop multinode example
+
+cat /etc/hosts
+10.0.0.94 hnn   ### hadoop name node
+10.0.0.95 hsnn  ### hadoop secondary name node
+10.0.0.96 hsa    #### hadoop slave1
+10.0.0.97 hsb     ### hadoop slave2
+
+
+apt-get update
+apt-get install openjdk-7-jdk   ### install java in  name node , slave name node  & 2 slave nodes
+
+##check the  java  path 
+
+update-alternatives --config java
+
+/usr/lib/jvm/java-7-openjdk-amd64/jre/bin/java
+
+JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64/jre/bin/java"
+
+add in  file  /etc/environment, cat /etc/environment
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games"
+JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64/jre/bin/java"
+
+### to check  for  javac  use  , update-alternatives --config javac
+
+wget http://apache.mirror.gtcomm.net/hadoop/common/hadoop-1.2.1/hadoop-1.2.1.tar.gz
+
+
+untar in to /opt/hadoop  ,  keep  hadoop user  passwd less from  namenode to secondary namenode , slaves (datanodes) , user anshu
+mkdir 
+
+tar -xvzf hadoop-1.2.1.tar.gz
+mv hadoop-1.2.1 hadoop
+
+mkdir -p /opt/hadooptmp/hdfstmp
+
+Modify below  files in hadoop/conf , as given
+cat hadoop-env.sh  ### add  JAVA_HOME
+export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+
+####  file  hdfs-site.xml,
+<configuration>
+<property>
+<name>dfs.replication</name>
+<value>2</value>
+</property>
+<property>
+<name>dfs.permissions</name>
+<value>false</value>
+</property>
+</configuration>
+
+
+####  file  mapred-site.xml
+<configuration>
+<property>
+<name>mapred.job.tracker</name>
+<value>hdfs://hnn:8021</value>   ### hnn is  hadoop namenode  master
+</property>
+</configuration>
+
+####  file   core-site.xml
+<configuration>
+
+<property>
+<name>fs.default.name</name>
+<value>hdfs://hnn:8020</value>
+</property>
+
+<property>
+<name>hadoop.tmp.dir</name>
+<value>/opt/hadooptmp/hdfstmp</value>   ### make  sure  /opt/hadooptmp/hdfstmp  is  hadoop user ownership  chown -R anshu:anshu /opt/hadoop  & chown -R anshu:anshu /opt/hadooptmp
+</property>
+
+</configuration>
+
+
+##############
+for  user  anshu  , in .bashrc  put lines,
+
+export HADOOP_HOME=/opt/hadoop
+export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+export HADOOP_CONF=/opt/hadoop/conf
+export HADOOP_PREFIX=/opt/hadoop
+export PATH=$PATH:$HADOOP_PREFIX/bin
+export HADOOP_INSTALL=/opt/hadoop
+export PATH=$PATH:$HADOOP_INSTALL/bin
+export PATH=$PATH:$HADOOP_INSTALL/sbin
+export HADOOP_MAPRED_HOME=$HADOOP_INSTALL
+export HADOOP_COMMON_HOME=$HADOOP_INSTALL
+export HADOOP_HDFS_HOME=$HADOOP_INSTALL
+export YARN_HOME=$HADOOP_INSTALL
+export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_INSTALL/lib/native
+export HADOOP_OPTS="-Djava.library.path=$HADOOP_INSTALL/lib"
+
+& source  .bashrc file , then  make  sure  /opt/hadooptmp/hdfstmp  is  hadoop user ownership  chown -R anshu:anshu /opt/hadoop  & chown -R anshu:anshu /opt/hadooptmp
+
+on all hosts
+make  sure passwdless login for  anshu fron master namenode to all other hosts & /etc/hosts entries are in place
+
+
+cat /opt/hadoop/conf/masters  &   /opt/hadoop/conf/slaves
+
+Copy masters and slaves to SecondaryNameNode
+Since SecondayNameNode configuration will be same as NameNode, we need to copy master and slaves to HadoopSecondaryNameNode.
+
+CONFIGURE MASTER AND SLAVES ON “SLAVES” NODE
+Since we are configuring slaves (HadoopSlave1 & HadoopSlave2) , masters file on slave machine is going to be empty
+& slave file will contain hostname entry only
+
+hadoop namenode -format
+
+
+anshu@hnn:~$ /opt/hadoop/bin/stop-all.sh
+Warning: $HADOOP_HOME is deprecated.
+
+stopping jobtracker
+hsa: stopping tasktracker
+hsb: stopping tasktracker
+stopping namenode
+hsa: stopping datanode
+hsb: stopping datanode
+hsnn: stopping secondarynamenode
+hnn: stopping secondarynamenode
+anshu@hnn:~$ /opt/hadoop/bin/start-all.sh
+Warning: $HADOOP_HOME is deprecated.
+
+starting namenode, logging to /opt/hadoop/libexec/../logs/hadoop-anshu-namenode-hnn.out
+hsa: starting datanode, logging to /opt/hadoop/libexec/../logs/hadoop-anshu-datanode-hsa.out
+hsb: starting datanode, logging to /opt/hadoop/libexec/../logs/hadoop-anshu-datanode-hsb.out
+hsnn: starting secondarynamenode, logging to /opt/hadoop/libexec/../logs/hadoop-anshu-secondarynamenode-hsnn.out
+hnn: starting secondarynamenode, logging to /opt/hadoop/libexec/../logs/hadoop-anshu-secondarynamenode-hnn.out
+starting jobtracker, logging to /opt/hadoop/libexec/../logs/hadoop-anshu-jobtracker-hnn.out
+hsa: starting tasktracker, logging to /opt/hadoop/libexec/../logs/hadoop-anshu-tasktracker-hsa.out
+hsb: starting tasktracker, logging to /opt/hadoop/libexec/../logs/hadoop-anshu-tasktracker-hsb.out
+
+
+run  /opt/hadoop/bin/start-all.sh
+
+
+We can check the namenode status from http://ec2-54-209-221-112.compute-1.amazonaws.com:50070/dfshealth.jsp
+
+
+Check Jobtracker status : http://ec2-54-209-221-112.compute-1.amazonaws.com:50030/jobtracker.jsp
+
+
+Slave Node Status for HadoopSlave1 : http://ec2-54-209-223-7.compute-1.amazonaws.com:50060/tasktracker.jsp
+
+
+Slave Node Status for HadoopSlave2 : http://ec2-54-209-219-2.compute-1.amazonaws.com:50060/tasktracker.jsp
+
+ubuntu@ec2-54-209-221-112:~/hadoop$ hadoop jar hadoop-examples-1.2.1.jar pi 10 1000000
+
+check in hnn 50030 jobtracker.jsp
