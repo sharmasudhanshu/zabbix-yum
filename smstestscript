@@ -1,0 +1,68 @@
+Correction  put 91  in front of mobile number , other wise script will fail,
+ 
+Example
+ 
+smsperl.pl     917718877488     "hi, today is a good day"
+ 
+ 
+ 
+hi Team,
+ 
+The  SMS gateway testing script  sends SMS to a mobile number,
+  
+We need to have below given ,
+ 
+SMS host  , here we have  smpptrans.smsapi.org
+SMS host port number  , here we have 2775
+ 
+SMPP perl module   , install  using  apt-get install libnet-smpp-perl
+ 
+& check telnet to smsgateway socket first,
+ 
+then run script  with two inputs  1)  mobile number 2) message  as  below
+ 
+smsperl.pl 7718877488  "hi, today is a good day"
+ 
+### install  apt-get install libnet-smpp-perl
+ 
+#####  usages  smsperl.pl 7718877488  "hi, today is a good day"
+ 
+#!/usr/bin/perl
+$a=$ARGV[0];
+$b=$ARGV[1];
+#print $a,$b;
+use Net::SMPP;
+ 
+my $host = 'smpptrans.smsapi.org';
+my $port = 2775;
+my $smpp = Net::SMPP->new_transmitter(
+    $host,
+    port      => $port,
+    system_id => 's_riltr@n',
+    password  => 'ril1tran',
+) or die;
+ 
+$resp_pdu = $smpp->submit_sm(
+    destination_addr => "$a",
+    short_message    => "$b"
+) or die;
+die "Response indicated error: " . $resp_pdu->explain_status()
+if $resp_pdu->status;
+$msg_id = $resp_pdu->{message_id};
+$resp_pdu = $smpp->query_sm(message_id => $msg_id) or die;
+die "Response indicated error: " . $resp_pdu->explain_status()
+if $resp_pdu->status;
+print "Message state is $resp_pdu->{message_state}\n";
+ 
+$resp_pdu = $smpp->replace_sm(
+    message_id    => $msg_id,
+    short_message => 'another test'
+) or die;
+die "Response indicated error: " . $resp_pdu->explain_status()
+if $resp_pdu->status;
+ 
+$resp_pdu = $smpp->cancel_sm(message_id => $msg_id) or die;
+die "Response indicated error: " . $resp_pdu->explain_status()
+if $resp_pdu->status;
+ 
+ 
