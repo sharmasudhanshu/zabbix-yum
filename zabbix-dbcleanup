@@ -1,0 +1,223 @@
+Use all information and scripts at your own risk. Make backups!
+
+My suggestion is disable housekeeping and to partition some tables based on clock, an unix timestamp field. If you wanna know more about partitioning access the MySQL Reference Manual – Partitioning Overview.
+
+ 
+
+The Concept
+
+An easy way to handle partitioning is splitting the tables into two groups based on their growth:
+
+Daily – basically the largest tables
+
+history
+history_log
+history_str
+history_text
+history_uint
+See more information about history tables.
+
+Monthly – other huge tables
+
+acknowledges
+alerts
+auditlog
+events
+service_alarms
+trends
+trends_unit
+ 
+one option is  
+use zabbix; 
+truncate table history; 
+optimize table history; 
+truncate table history_str; 
+optimize table history_str; 
+truncate table history_uint; 
+optimize table history_uint; 
+truncate table trends; 
+optimize table trends; 
+truncate table trends_uint; 
+optimize table trends_uint; 
+truncate table events; 
+optimize table events;
+
+other is to do partitioning,
+
+Step 1 – Preparing the Tables
+
+To partition a table using the clock, the field needs belong to the primary key or not have one. So we need make some key changes on this tables:
+
+
+ALTER TABLE `acknowledges` DROP PRIMARY KEY, ADD KEY `acknowledgedid` (`acknowledgeid`);
+ALTER TABLE `alerts` DROP PRIMARY KEY, ADD KEY `alertid` (`alertid`);
+ALTER TABLE `auditlog` DROP PRIMARY KEY, ADD KEY `auditid` (`auditid`);
+ALTER TABLE `events` DROP PRIMARY KEY, ADD KEY `eventid` (`eventid`);
+ALTER TABLE `service_alarms` DROP PRIMARY KEY, ADD KEY `servicealarmid` (`servicealarmid`);
+ALTER TABLE `history_log` DROP PRIMARY KEY, ADD PRIMARY KEY (`itemid`,`id`,`clock`);
+ALTER TABLE `history_log` DROP KEY `history_log_2`;
+ALTER TABLE `history_text` DROP PRIMARY KEY, ADD PRIMARY KEY (`itemid`,`id`,`clock`);
+ALTER TABLE `history_text` DROP KEY `history_text_2`;
+Step 2 – Setup Monthly Partitions
+
+Repeat this step with each table (see above) with appropriate months.
+
+In this example, we’ll create the monthly partitions to events table since May 2011 until December 2011:
+
+
+ALTER TABLE `events` PARTITION BY RANGE( clock ) (
+PARTITION p201105 VALUES LESS THAN (UNIX_TIMESTAMP("2011-06-01 00:00:00")),
+PARTITION p201106 VALUES LESS THAN (UNIX_TIMESTAMP("2011-07-01 00:00:00")),
+PARTITION p201107 VALUES LESS THAN (UNIX_TIMESTAMP("2011-08-01 00:00:00")),
+PARTITION p201108 VALUES LESS THAN (UNIX_TIMESTAMP("2011-09-01 00:00:00")),
+PARTITION p201109 VALUES LESS THAN (UNIX_TIMESTAMP("2011-10-01 00:00:00")),
+PARTITION p201110 VALUES LESS THAN (UNIX_TIMESTAMP("2011-11-01 00:00:00")),
+PARTITION p201111 VALUES LESS THAN (UNIX_TIMESTAMP("2011-12-01 00:00:00")),
+PARTITION p201112 VALUES LESS THAN (UNIX_TIMESTAMP("2012-01-01 00:00:00"))
+);
+Step 3 – Setup Daily Partitions
+
+Repeat this step with each table (see above) with appropriate days.
+
+In this example, we’ll create the daily partitions to history_uint table since 15th May until 22th May:
+
+
+
+ALTER TABLE `history_uint` PARTITION BY RANGE( clock ) (
+PARTITION p20110515 VALUES LESS THAN (UNIX_TIMESTAMP("2011-05-16 00:00:00")),
+PARTITION p20110516 VALUES LESS THAN (UNIX_TIMESTAMP("2011-05-17 00:00:00")),
+PARTITION p20110517 VALUES LESS THAN (UNIX_TIMESTAMP("2011-05-18 00:00:00")),
+PARTITION p20110518 VALUES LESS THAN (UNIX_TIMESTAMP("2011-05-19 00:00:00")),
+PARTITION p20110519 VALUES LESS THAN (UNIX_TIMESTAMP("2011-05-20 00:00:00")),
+PARTITION p20110520 VALUES LESS THAN (UNIX_TIMESTAMP("2011-05-21 00:00:00")),
+PARTITION p20110521 VALUES LESS THAN (UNIX_TIMESTAMP("2011-05-22 00:00:00")),
+PARTITION p20110522 VALUES LESS THAN (UNIX_TIMESTAMP("2011-05-23 00:00:00"))
+);
+Maintaining the Partitions Manually
+
+Adding new partitions:
+
+
+ALTER TABLE `history_uint` ADD PARTITION (
+PARTITION p20110523 VALUES LESS THAN (UNIX_TIMESTAMP("2011-05-24 00:00:00"))
+);
+Dropping partitions (Housekeeping):
+
+
+1
+ALTER TABLE `history_uint` DROP PARTITION p20110515;
+Step 4 – Auto Daily Partitioning
+
+Make sure that you created the partitioning correctly on the history tables (Step 3)
+
+This script drops and creates automatically the daily partitioning.
+
+The default is keep only last 3 days, if you wanna more days change @mindays variable.
+
+Don’t forget to put it on cron:
+
+
+
+mysql -B -h localhost -u zabbix -pPASSWORD zabbix -e "CALL create_zabbix_partitions();"
+Procedures
+
+https://github.com/xsbr/zabbixzone/blob/master/zabbix-mysql-autopartitioning.sql
+
+
+
+/**************************************************************
+MySQL Auto Partitioning Procedure for Zabbix 1.8
+http://zabbixzone.com/zabbix/partitioning-tables/
+ 
+Author: Ricardo Santos (rsantos at gmail.com)
+Version: 20110518
+**************************************************************/
+DELIMITER //
+DROP PROCEDURE IF EXISTS `zabbix`.`create_zabbix_partitions` //
+CREATE PROCEDURE `zabbix`.`create_zabbix_partitions` ()
+BEGIN
+CALL zabbix.create_next_partitions("zabbix","history");
+CALL zabbix.create_next_partitions("zabbix","history_log");
+CALL zabbix.create_next_partitions("zabbix","history_str");
+CALL zabbix.create_next_partitions("zabbix","history_text");
+CALL zabbix.create_next_partitions("zabbix","history_uint");
+CALL zabbix.drop_old_partitions("zabbix","history");
+CALL zabbix.drop_old_partitions("zabbix","history_log");
+CALL zabbix.drop_old_partitions("zabbix","history_str");
+CALL zabbix.drop_old_partitions("zabbix","history_text");
+CALL zabbix.drop_old_partitions("zabbix","history_uint");
+END //
+DROP PROCEDURE IF EXISTS `zabbix`.`create_next_partitions` //
+CREATE PROCEDURE `zabbix`.`create_next_partitions` (SCHEMANAME varchar(64), TABLENAME varchar(64))
+BEGIN
+DECLARE NEXTCLOCK timestamp;
+DECLARE PARTITIONNAME varchar(16);
+DECLARE CLOCK int;
+SET @totaldays = 7;
+SET @i = 1;
+createloop: LOOP
+SET NEXTCLOCK = DATE_ADD(NOW(),INTERVAL @i DAY);
+SET PARTITIONNAME = DATE_FORMAT( NEXTCLOCK, 'p%Y%m%d' );
+SET CLOCK = UNIX_TIMESTAMP(DATE_FORMAT(DATE_ADD( NEXTCLOCK ,INTERVAL 1 DAY),'%Y-%m-%d 00:00:00'));
+CALL zabbix.create_partition( SCHEMANAME, TABLENAME, PARTITIONNAME, CLOCK );
+SET @i=@i+1;
+IF @i &gt; @totaldays THEN
+LEAVE createloop;
+END IF;
+END LOOP;
+END //
+DROP PROCEDURE IF EXISTS `zabbix`.`drop_old_partitions` //
+CREATE PROCEDURE `zabbix`.`drop_old_partitions` (SCHEMANAME varchar(64), TABLENAME varchar(64))
+BEGIN
+DECLARE OLDCLOCK timestamp;
+DECLARE PARTITIONNAME varchar(16);
+DECLARE CLOCK int;
+SET @mindays = 3;
+SET @maxdays = @mindays+4;
+SET @i = @maxdays;
+droploop: LOOP
+SET OLDCLOCK = DATE_SUB(NOW(),INTERVAL @i DAY);
+SET PARTITIONNAME = DATE_FORMAT( OLDCLOCK, 'p%Y%m%d' );
+CALL zabbix.drop_partition( SCHEMANAME, TABLENAME, PARTITIONNAME );
+SET @i=@i-1;
+IF @i &lt;= @mindays THEN
+LEAVE droploop;
+END IF;
+END LOOP;
+END //
+DROP PROCEDURE IF EXISTS `zabbix`.`create_partition` //
+CREATE PROCEDURE `zabbix`.`create_partition` (SCHEMANAME varchar(64), TABLENAME varchar(64), PARTITIONNAME varchar(64), CLOCK int)
+BEGIN
+DECLARE RETROWS int;
+SELECT COUNT(1) INTO RETROWS
+FROM `information_schema`.`partitions`
+WHERE `table_schema` = SCHEMANAME AND `table_name` = TABLENAME AND `partition_name` = PARTITIONNAME;
+ 
+IF RETROWS = 0 THEN
+SELECT CONCAT( "create_partition(", SCHEMANAME, ",", TABLENAME, ",", PARTITIONNAME, ",", CLOCK, ")" ) AS msg;
+SET @sql = CONCAT( 'ALTER TABLE `', SCHEMANAME, '`.`', TABLENAME, '`',
+' ADD PARTITION (PARTITION ', PARTITIONNAME, ' VALUES LESS THAN (', CLOCK, '));' );
+PREPARE STMT FROM @sql;
+EXECUTE STMT;
+DEALLOCATE PREPARE STMT;
+END IF;
+END //
+DROP PROCEDURE IF EXISTS `zabbix`.`drop_partition` //
+CREATE PROCEDURE `zabbix`.`drop_partition` (SCHEMANAME varchar(64), TABLENAME varchar(64), PARTITIONNAME varchar(64))
+BEGIN
+DECLARE RETROWS int;
+SELECT COUNT(1) INTO RETROWS
+FROM `information_schema`.`partitions`
+WHERE `table_schema` = SCHEMANAME AND `table_name` = TABLENAME AND `partition_name` = PARTITIONNAME;
+ 
+IF RETROWS = 1 THEN
+SELECT CONCAT( "drop_partition(", SCHEMANAME, ",", TABLENAME, ",", PARTITIONNAME, ")" ) AS msg;
+SET @sql = CONCAT( 'ALTER TABLE `', SCHEMANAME, '`.`', TABLENAME, '`',
+' DROP PARTITION ', PARTITIONNAME, ';' );
+PREPARE STMT FROM @sql;
+EXECUTE STMT;
+DEALLOCATE PREPARE STMT;
+END IF;
+END //
+DELIMITER ;
+Related Posts:
