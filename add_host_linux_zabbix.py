@@ -1,3 +1,16 @@
+Prerequisite,
+
+export http_proxy=http://10.135.80.164:8678
+ 
+apt-get install python-pip
+ 
+export https_proxy=http://10.135.80.164:8678  ### for https  proxy
+ 
+pip install zabbix-api  ### required for add hosts script
+pip install pyzabbix
+
+
+#############################################################################################################
 first apt-get install python-pip  or  yum install python-pip
 pip install zabbix-api  ### use https_proxy not http proxy
 
