@@ -54,6 +54,7 @@ zapi.item.create({ 'name' : name,
 
 
 zapi.template.massadd({"templates": [{ "templateid": result}] , "hosts": [{"hostid": "10116"} ] })
+zapi.template.massadd({"templates": [{ "templateid": result}] , "groups": [{"groupid": "11"} ] })  ##mass add by groupid's
 zapi.trigger.create({ 'host' : '10073' , 'description' : 'added  for  test', 'status' : 0 , 'type' : 0 ,'priority' : 3 , 'expression' : '{Template App MySQL:jgite.ume.last(0)}=0'})
 #test_API_version()
 #groupid = create_group('Linux servers')
