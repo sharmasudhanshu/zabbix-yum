@@ -1,3 +1,26 @@
+
+first add pip & moudles
+
+pip install  zabbix-api  ### giving below error
+ImportError: cannot import name IncompleteRead
+
+apt-get install python3-setuptools
+easy_install3 -U pip    ### to install latest  pip 
+root@zabbixs:/opt# pip
+pip     pip2    pip3    pip3.4   ### now  you will see many pip's
+
+root@zabbixs:/opt# pip3.4 install zabbix-api   ##use latest pip for installtions
+Collecting zabbix-api
+  Downloading zabbix-api-0.4.tar.gz
+Installing collected packages: zabbix-api
+  Running setup.py install for zabbix-api
+Successfully installed zabbix-api-0.4
+
+
+& use   #!/usr/bin/python3.4  in script to run code
+
+### now use below scripts
+
 #!/usr/bin/python3.4
 
 ###########use  pythin 3.4 & pip3.4 for zabbix api install & run programms
