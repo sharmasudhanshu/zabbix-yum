@@ -35,10 +35,11 @@ password = getpass()
 
 
 
-def test_API_version():
-    """Method to check if server has compatible version of API."""
-    if zapi.api_version() <= 1.4:
-        raise Exception('Example script works only with API 1.4 or higher.')
+
+#def test_API_version():
+#    """Method to check if server has compatible version of API."""
+#    if zapi.api_version() <= 1.4:
+ #       raise Exception('Example script works only with API 1.4 or higher.')
 
 
 zapi = zabbix_api.ZabbixAPI("http://10.0.0.92/zabbix")
