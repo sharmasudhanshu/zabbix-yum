@@ -1,0 +1,126 @@
+cat /etc/logstash/server.conf
+input {
+  redis {
+    host => "10.0.0.18"   ### Redis server
+    type => "redis"
+    data_type => "list"
+    key => "logstash"   ### refer key with redis
+  }
+}
+output {
+stdout { }
+  elasticsearch {
+      host => "10.0.0.18"  ### elasticsearch  server ipaddress
+                cluster => "logstash"  ### refer cluster with elasticsearch
+                embedded => "true"
+                        codec => json {
+      charset => "UTF-8"
+      }
+  }
+}
+
+
+##############################################################################################################################
+ cat /etc/logstash/agent.conf
+input {
+
+  file {
+    type => "syslog"
+    path => ["/var/log/auth.log"]
+   start_position => beginning
+   exclude => ["*.gz,shipper.log"]
+  }
+}
+
+output {
+  stdout { }
+  redis {
+    host => "10.0.0.18"  ### logstash server ip address  , must be  reachable
+    port => 6379     ######  redis port on logstash server
+    data_type => "list"  ### refer data type  with  redis
+    key => "logstash"  ### refer key with redis
+  }
+}
+
+#############################################################################################################################
+/etc/elasticsearch/elasticsearch.yml
+cluster.name: logstash
+node.name: "logstash test"
+path.data: /logstash/data/elasticsearch/data
+path.work: /logstash/data/elasticsearch/work
+path.logs: /var/log/elasticsearch
+http.port: 9200
+service elasticsearch restart
+
+chown -R elasticsearch:elasticsearch /logstash/data/  &  chmod 755
+
+###################################################################################################################################
+/etc/redis/redis.conf
+port 6379
+
+chmod & chown  /logstash/data/elasticsearch/data  ,  /logstash/data/elasticsearch/work ,   check /var/log/elasticsearch for errors
+###################################################################################################################################
+
+apt-get install openjdk-7-jre
+
+cd /
+curl -O https://download.elasticsearch.org/logstash/logstash/logstash-1.4.2.tar.gz
+tar zxvf logstash-1.4.2.tar.gz
+
+wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.3.2.deb
+dpkg -i elasticsearch-1.3.2.deb
+
+apt-get install redis-server
+
+cd ~
+wget https://download.elasticsearch.org/kibana/kibana/kibana-3.0.0.tar.gz
+tar xvfz kibana-3.0.0.tar.gz
+
+sudo apt-get install nginx
+
+cat /etc/redis-server/redis.conf
+bind 0.0.0.0
+
+service redis-server restart
+
+
+service elasticsearch restart   ### test at  http://localhost:9200
+
+cd kibana-3.0.0   &  edit a file named config.js in the Kibana directory to point it to the correct host
+vi config.js
+
+change  elasticsearch : "http://"+window.location.hostname+":9200"
+to
+
+elasticsearch : "http://10.0.0.29:9200",
+
+
+
+NGINX
+
+mkdir /var/www
+cp -R ~/kibana-3.0.0 /var/www/kibana
+
+vi  /etc/nginx/sites-enabled/default    file 
+root /usr/share/nginx/www;
+and change it to read as follows:
+root /var/www/kibana;
+
+sudo service nginx restart
+
+/root/logstash-1.4.2/bin/logstash  agent -f /etc/logstash/server.conf  --log /root/shipper.log &
+
+/root/logstash-1.4.2/bin/logstash  agent -f /etc/logstash/agent.conf  --log /root/shipper.log &
+
+####################################################################################################################################################
+10.0.0.17  ##client / agent
+ /root/logstash-1.4.2/bin/logstash  agent -f /etc/logstash/agent.conf  --log /root/shipper.log & 
+
+ 10.0.0.18  ### server 
+/etc/init.d/redis-server start/status
+/etc/init.d/elasticsearch  start/status
+/etc/init.d/redis-server start/status
+/root/logstash-1.4.2/bin/logstash  agent -f /etc/logstash/server.conf  --log /root/shipper.log &
+/etc/init.d/nginx  start/status
+
+cat /etc/elasticsearch/elasticsearch.yml  
