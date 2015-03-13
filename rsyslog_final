@@ -1,0 +1,166 @@
+First is  log origin server , let’s  take a tomcat server
+ 
+Carefully prepare input file  entries,
+ 
+cat /etc/rsyslog.d/20-tomcatlogs.conf
+$ModLoad imfile
+ 
+ 
+$InputFileName  /usrdata/logs/tomcatlogs/snw-dss-catalina.log
+$InputFileTag 10.15.81.210.snw-dss-catalina
+$InputFileStateFile state-10-tomcat-snw-dss-catalina_debug                   #############   state file name must be unique , better use ipaddress in state file names
+$InputFileSeverity INFO
+$InputFileFacility LOCAL6
+$InputFilePollInterval 10
+$InputRunFileMonitor
+ 
+ 
+$InputFileName /usrdata/logs/tomcatlogs/snw-dss-localhost.log
+$InputFileTag 10.15.81.210.snw-dss-localhost
+$InputFileStateFile state-10-tomcat-snw-dss-localhost_debug                      #############   state file name must be unique , better use ipaddress in state file names
+$InputFileSeverity INFO
+$InputFileFacility LOCAL6
+$InputFilePollInterval 10
+$InputRunFileMonitor
+ 
+ 
+ 
+#############Origin server’s  rsyslog conf file to fwd logs ,
+ 
+cat /etc/rsyslog.conf
+$ModLoad imuxsock # provides support for local system logging
+$ModLoad imklog   # provides kernel logging support
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+$RepeatedMsgReduction on
+$FileOwner syslog
+$FileGroup adm
+$FileCreateMode 0640
+$DirCreateMode 0755
+$Umask 0022
+$PrivDropToUser syslog
+$PrivDropToGroup syslog
+$WorkDirectory /var/spool/rsyslog
+$IncludeConfig /etc/rsyslog.d/*.conf
+*.* @10.135.63.146:514                                                 ### ip for  udp port configuration
+#*.* @@10.135.63.208:10514
+ 
+ 
+####Relay server’s  iptables for udp port & tcp port must be open,  Access & security rules must be open for udp & tcp ,
+ ###in /var/log check whether syslog is able to create new dir's
+cat  /etc/rsyslog.conf
+$ModLoad imtcp
+$ModLoad imudp
+$ModLoad imuxsock
+$ModLoad imklog
+# Templates
+# log every host in its own directory
+$template RemoteHost,"/var/syslog/hosts/%HOSTNAME%/%$YEAR%/%$MONTH%/%$DAY%/syslog.log"
+### Rulesets
+# Local Logging
+$RuleSet local
+kern.*                                                 /var/log/messages
+*.info;mail.none;authpriv.none;cron.none                /var/log/messages
+authpriv.*                                              /var/log/secure
+mail.*                                                  -/var/log/maillog
+cron.*                                                  /var/log/cron
+*.emerg                                                 *
+uucp,news.crit                                          /var/log/spooler
+local7.*                                                /var/log/boot.log
+# use the local RuleSet as default if not specified otherwise
+$DefaultRuleset local
+ 
+# Remote Logging
+$RuleSet remote
+*.* ?RemoteHost
+# Send messages we receive to Gremlin
+*.* @10.135.63.208:514
+### Listeners
+# bind ruleset to tcp listener
+$InputTCPServerBindRuleset remote
+# and activate it:
+$InputTCPServerRun 10514
+ 
+$InputUDPServerBindRuleset remote
+$UDPServerRun 514
+ 
+ 
+#################################################
+iptables -A INPUT -p udp --dport 514 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT  -p udp --sport 514 -m state --state ESTABLISHED -j ACCEPT
+iptables -I INPUT 1 -p udp -m state --state NEW -m udp --dport 514 -j ACCEPT
+iptables-save
+ 
+ 
+###########################################################################################################################################################
+rsyslog final target , in /var/log check whether syslog is able to create new dir's
+####Relay server’s  iptables for udp port & tcp port must be open,  Access & security rules must be open for udp & tcp ,
+ 
+ 
+ 
+cat /etc/rsyslog.conf
+$ModLoad imuxsock # provides support for local system logging
+$ModLoad imklog   # provides kernel logging support
+$ModLoad imudp
+$UDPServerRun 514
+#$ModLoad imtcp
+#$InputTCPServerRun 10514
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+$FileOwner syslog
+$FileGroup adm
+$FileCreateMode 0640
+$DirCreateMode 0755
+$Umask 0022
+$PrivDropToUser syslog
+$PrivDropToGroup syslog
+$WorkDirectory /var/spool/rsyslog
+$IncludeConfig /etc/rsyslog.d/*.conf
+ 
+$template FILENAME,"/var/log/%fromhost-ip%/auth.log.log"
+*.* ?FILENAME
+ 
+iptables -A INPUT -p udp --dport 514 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT  -p udp --sport 514 -m state --state ESTABLISHED -j ACCEPT
+iptables -I INPUT 1 -p udp -m state --state NEW -m udp --dport 514 -j ACCEPT
+iptables-save
+ 
+ 
+ 
+ 
+ 
+ 
+Config Statements
+# Modules
+$ModLoad imtcp
+$ModLoad imudp
+$ModLoad imuxsock
+$ModLoad imklog
+# Templates
+# log every host in its own directory
+$template RemoteHost,"/var/syslog/hosts/%HOSTNAME%/%$YEAR%/%$MONTH%/%$DAY%/syslog.log"
+### Rulesets
+# Local Logging
+$RuleSet local
+kern.*                                                 /var/log/messages
+*.info;mail.none;authpriv.none;cron.none                /var/log/messages
+authpriv.*                                              /var/log/secure
+mail.*                                                  -/var/log/maillog
+cron.*                                                  /var/log/cron
+*.emerg                                                 *
+uucp,news.crit                                          /var/log/spooler
+local7.*                                                /var/log/boot.log
+# use the local RuleSet as default if not specified otherwise
+$DefaultRuleset local
+ 
+# Remote Logging
+$RuleSet remote
+*.* ?RemoteHost
+# Send messages we receive to Gremlin
+*.* @@W.X.Y.Z:514
+### Listeners
+# bind ruleset to tcp listener
+$InputTCPServerBindRuleset remote
+# and activate it:
+$InputTCPServerRun 10514
+ 
+$InputUDPServerBindRuleset remote
+$UDPServerRun 514
