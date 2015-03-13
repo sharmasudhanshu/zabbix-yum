@@ -1,0 +1,63 @@
+ubuntu@test-ubuntu01:~$ cat ntp-update.sh
+#!/bin/bash
+ 
+for i in `cat acs-servers`
+do
+ssh -i /home/ubuntu/acs_prod_key.pem ubuntu@$i
+echo $i
+fab -H ubuntu@$i -i /home/ubuntu/acs_prod_key.pem ntpcon -f /home/ubuntu/fab-ntp.py
+ 
+done
+ 
+ubuntu@test-ubuntu01:~$ cat  /home/ubuntu/fab-ntp.py
+#!/usr/bin/env python
+from fabric.api import *
+ 
+def ntpcon():
+        sudo("sed -i 's/server 0.debian.pool.ntp.org iburst/#server 0.debian.pool.ntp.org iburst/g' /etc/ntp.conf")
+        sudo("sed -i 's/server 1.debian.pool.ntp.org iburst/#server 1.debian.pool.ntp.org iburst/g' /etc/ntp.conf")
+        sudo("sed -i 's/server 2.debian.pool.ntp.org iburst/#server 2.debian.pool.ntp.org iburst/g' /etc/ntp.conf")
+        sudo("sed -i 's/server 3.debian.pool.ntp.org iburst/#server 3.debian.pool.ntp.org iburst/g' /etc/ntp.conf")
+        sudo("sed -i 's/#server ntp.your-provider.example/server 10.204.105.101/g' /etc/ntp.conf")
+        sudo("service ntp restart")
+        sudo("ntpq -p")
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+##############################################################################################
+######main commands
+sed -i 's/server 0.debian.pool.ntp.org iburst/#server 0.debian.pool.ntp.org iburst/g' /etc/ntp.conf
+sed -i 's/server 1.debian.pool.ntp.org iburst/#server 1.debian.pool.ntp.org iburst/g' /etc/ntp.conf
+sed -i 's/server 2.debian.pool.ntp.org iburst/#server 2.debian.pool.ntp.org iburst/g' /etc/ntp.conf
+sed -i 's/server 3.debian.pool.ntp.org iburst/#server 3.debian.pool.ntp.org iburst/g' /etc/ntp.conf
+sed -i 's/#server ntp.your-provider.example/server 10.204.105.101/g' /etc/ntp.conf
+service ntp restart
+ntpq -p
+#############################################################################################################
+ 
+/home/ubuntu/fab-ntp.py
+#!/usr/bin/env python
+from fabric.api import *
+ 
+def ntpcon():
+        sudo("sed -i 's/server 0.debian.pool.ntp.org iburst/#server 0.debian.pool.ntp.org iburst/g' /etc/ntp.conf")
+        sudo("sed -i 's/server 1.debian.pool.ntp.org iburst/#server 1.debian.pool.ntp.org iburst/g' /etc/ntp.conf")
+        sudo("sed -i 's/server 2.debian.pool.ntp.org iburst/#server 2.debian.pool.ntp.org iburst/g' /etc/ntp.conf")
+        sudo("sed -i 's/server 3.debian.pool.ntp.org iburst/#server 3.debian.pool.ntp.org iburst/g' /etc/ntp.conf")
+        sudo("sed -i 's/#server ntp.your-provider.example/server 10.204.105.101/g' /etc/ntp.conf")
+        sudo("service ntp restart")
+        sudo("ntpq -p")
+ 
+ 
+ 
+ 
