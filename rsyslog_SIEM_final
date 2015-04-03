@@ -1,0 +1,91 @@
+####################################
+origin server , /etc/rsyslog.conf
+
+$ModLoad imuxsock # provides support for local system logging
+$ModLoad imklog   # provides kernel logging support
+#$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+
+### this fwd template will append hostname.ipaddress as zabbix.10.135.63.208 in all lines 
+$template MyTemplate, "<%pri%> %timestamp% zabbix.10.135.63.208 %syslogtag% %msg%\n"
+$ActionForwardDefaultTemplate MyTemplate
+
+$RepeatedMsgReduction on
+$FileOwner syslog
+$FileGroup adm
+$FileCreateMode 0640
+$DirCreateMode 0755
+$Umask 0022
+$PrivDropToUser syslog
+$PrivDropToGroup syslog
+$WorkDirectory /var/spool/rsyslog
+$IncludeConfig /etc/rsyslog.d/*.conf
+*.* @10.135.63.146:514
+
+
+#### input files conf ,
+
+cat /etc/rsyslog.d/21-zabbix.conf     ##below conf for each file must be unique , InputFileTag , InputFileStateFile etc
+$ModLoad imfile
+
+
+$InputFileName  /var/log/zabbix/zabbix_server.log
+$InputFileTag 10.15.63.208.zabbixserver
+$InputFileStateFile state-10.15.63.208.zabbixserver_debug
+$InputFileSeverity INFO
+$InputFileFacility LOCAL6
+$InputFilePollInterval 10
+$InputRunFileMonitor
+
+
+$InputFileName /var/log/zabbix/zabbix_agentd.log
+$InputFileTag 10.15.63.208.zabbixagentd
+$InputFileStateFile state-10.15.63.208.zabbixagentd_debug
+$InputFileSeverity INFO
+$InputFileFacility LOCAL6
+$InputFilePollInterval 10
+$InputRunFileMonitor
+ 
+
+
+
+#######################################################################################################################################
+relay server , /etc/rsyslog.conf
+
+$ModLoad imtcp
+$ModLoad imudp
+$ModLoad imuxsock
+$ModLoad imklog
+# Templates
+# log every host in its own directory  ,  ex /var/syslog/hosts/EASYCLINSTAPWS1/2015/04/03
+$template RemoteHost,"/var/syslog/hosts/%HOSTNAME%/%$YEAR%/%$MONTH%/%$DAY%/syslog.log"
+### Rulesets
+# Local Logging
+$RuleSet local
+kern.*                                                 /var/log/messages
+*.info;mail.none;authpriv.none;cron.none                /var/log/messages
+authpriv.*                                              /var/log/secure
+mail.*                                                  -/var/log/maillog
+cron.*                                                  /var/log/cron
+*.emerg                                                 *
+uucp,news.crit                                          /var/log/spooler
+local7.*                                                /var/log/boot.log
+# use the local RuleSet as default if not specified otherwise
+$DefaultRuleset local
+
+# Remote Logging
+$RuleSet remote
+*.* ?RemoteHost
+# Send messages we receive to Gremlin
+#*.* @@10.137.0.44:514
+#*.* @@rjilsiem.jio.com:514
+
+*.* @@10.137.0.43:514
+### Listeners
+# bind ruleset to tcp listener
+$InputTCPServerBindRuleset remote
+# and activate it:
+$InputTCPServerRun 10514
+
+$InputUDPServerBindRuleset remote
+$UDPServerRun 514
+
