@@ -1,0 +1,116 @@
+
+
+
+
+
+As you have mentioned above that Static Ip's are by default - http://docs.openstack.org/user-guide/content/manage_ip_addresses.html
+
+- Increasing dhcp lease time would cause lower network traffic (DHCP clients would renew their leases less frequently).
+Please note that such change would need to be tested in environment that is as close as possible to production. In the past we had problems with dhcp leases in MOS.
+- These IPs are persistent - they won't change by themselves. But dhcp lease renew is still needed.. and that could lead to problems.
+- In theory one could assign static IP in OS. In practice.. it is not the way it should be configured and it is not supported. The better (supported) method would be method provided by Denis:
+##### nova boot --image <image-id> --flavor <id> --nic port-id=<port-uuid> <vm-name>
+Assigning VM to port. I don't remember problem with that.
+
+
+
+#####################################################################################################################################
+
+The initial concerns regarding dhcp server lease duration were resolved. In Havana dhcp_lease_duration was set to 86400s (commit: https://github.com/openstack/neutron/commit/d9832282cf656b162c51afdefb830dacab72defe)
+We think that is safe to use 1800s as lease duration and observe if problem still persist.
+We are continuing our tests in lab environment and we are also engage additional teams for best practices.
+
+
+# sed -i 's/dhcp_lease_duration = 120/dhcp_lease_duration = 1800/' /etc/neutron/neutron.conf
+###########################################################################################################################################
+Change metric:
+Time schedule: 09.00 - 11.00 pm IST 03/31/2015 (with backout window)
+Implementation Plan:
+1) Check status of dhcp agent and dnsmasq process:
+a) crm status
+b) ps -ef | grep dnsmasq @ node-40
+c) neutron agent-list |grep DHCP
+2) Change dhcp_lease_duration on 3 controllers:
+sed -i 's/dhcp_lease_duration = 120/dhcp_lease_duration = 1800/' /etc/neutron/neutron.conf
+3) Restart dhcp service:
+crm resource restart p_neutron-dhcp-agent
+4) Check status of dhcp agent and dnsmasq process after resource restart:
+a) crm status
+b) ps -ef | grep dnsmasq @ node-40
+Ensure that dnsmasq runs on the same controller node as before (node-40)
+c) neutron agent-list |grep dhcp
+d) Use Tomasz's script for check of namespaces (attached):
+/root/TAJ/metadata_dhcp_monitor.sh
+Check needs to take place on node that is running dhcp, eg.
+root@node-40:~/TAJ# crm resource status p_neutron-dhcp-agent
+resource p_neutron-dhcp-agent is running on: node-40
+e) Check Zabbix dashboard for events.
+
+Rollback:
+1) Change dhcp_lease_duration on 3 controllers:
+sed -i 's/dhcp_lease_duration = 1800/dhcp_lease_duration = 120/' /etc/neutron/neutron.conf
+2) crm resource restart p_neutron-dhcp-agent
+3) Check status of dhcp agent and dnsmasq process after resource restart:
+a) crm status
+b) ps -ef | grep dnsmasq @ node-40
+Ensure that dnsmasq runs on the same controller node as before (node-40)
+c) neutron agent-list |grep DHCP
+d) Use Tomasz's script for check of namespaces (attached; check needs to take place on node that is running dhcp):
+/root/TAJ/metadata_dhcp_monitor.sh
+e) Check Zabbix dashboard for events.
+
+Pre-implementation plan:
+- Perform tests in lab environment under stress condition. [Done]
+- Check Zabbix dashboard for events
+Severity:
+Sev 3;
+during step (3) ("crm resource restart p_neutron-dhcp-agent") no dhcp request will be processed. Some systems could lost network configuration if service restart will take long time.
+during acquiring new lease time (after change in dhcp_lease_duration) some session (like RDP) will be disconnected (checked in Windows 2008 and RDP session - reconnection).
+
+########################################################################################################################################
+Script is on the DHCP node: node-40
+
+/root/TAJ/metadata_dhcp_monitor.sh
+Script:
+root@node-40:~/TAJ# cat metadata_dhcp_monitor.sh 
+#!/bin/sh
+# TJAROSZEWSKI@MIRANTIS [20.07.2014]
+# Script verify availability of dhcp servers in namespaces
+export LC_ALL=C;
+RETURNCODE=0;
+Q_NUM=0;
+Q_NUM_TOTAL=0;
+QROUTERS_ARRAY=`ip netns ls | grep -i qdhcp`;
+if [ $? -eq 0 ]; then
+if [ -n "$QROUTERS_ARRAY" ]; then
+for LIST in $QROUTERS_ARRAY; do
+# CHECKING SIZE of QROUTER; MUST BE EQUAL to 45;
+Q_SIZE=`echo $LIST | wc -c`;
+if [ $Q_SIZE -eq 43 ]; then
+Q_NUM_TOTAL=$(($Q_NUM_TOTAL+1));
+ip netns exec $LIST \
+lsof -P -i :67 | grep -q ':67' && Q_NUM=$((Q_NUM+1)) || echo MISSING: $LIST;
+else
+echo "UNKNOWN: SIZE of DHCP does not match 45 chars";
+exit 1;
+fi
+done
+else
+echo "UNKNOWN: No DHCP present";
+exit 1;
+fi
+else
+echo "UNKNOWN: IP Netns command failure OR No DHCP present";
+exit 2;
+fi
+echo Q_NUM: $Q_NUM;
+echo Q_NUM_TOTAL: $Q_NUM_TOTAL;
+if [ $Q_NUM -ne $Q_NUM_TOTAL ]; then
+echo "ERROR: $(($Q_NUM_TOTAL-$Q_NUM)) DHCP server/s is/are offline";
+RETURNCODE=1;
+else
+echo "OK: All DHCP instances are running";
+RETURNCODE=0;
+fi
+exit $RETURNCODE;
+# EOF
