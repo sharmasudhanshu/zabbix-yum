@@ -1,0 +1,1407 @@
+gepetto http://puppetlabs.github.io/geppetto/download.html    a puppet coding IDE
+http://docs.puppetlabs.com/pe/latest/quick_start.html
+######################################################################################################################
+
+
+Error: Could not request certificate: SSL_connect returned=1 
+errno=0 state=SSLv3 read server certificate B: certificate verify
+failed: [self signed certificate in certificate chain for /CN=Puppet
+CA: snspay.cn]
+
+recreate a  cert ,  delete  /var/lib/puppet/ssl  from the  agent &  on server puppet cert clean certname
+puppet agent -t
+
+##########################################################################################################################
+
+Error: /File[/var/opt/lib/pe-puppet/lib]: Could not evaluate: SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed:
+ [CRL is not yet valid for /CN=] Could not retrieve file metadata for puppet:///plugins: SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B:
+ certificate verify failed: [CRL is not yet valid for /CN=]
+
+That error message usually indicates that time is not in sync between all of the machines. Running ntpdate or using the ntpd service should bring time into
+ sync and alleviate the problem. Here's an example of another puppet user seeing this problem:
+
+##########################################################################################################################
+ 
+
+puppet  certificate  case , spital issue
+puppet cert names must be short & in small case , puppet can not make a  dir in large case so on puppet servers side, so keep cert names in small cases
+
+Puppet programs are called “manifests,” and they use the .pp ?le extension
+
+	file {'testfile':	
+	path =>	'/tmp/testfile',
+	ensure	=>	present,
+	mode =>	0640,
+	content	=>	"I'm	a	test	file.",
+	}
+
+package { 'git':
+  ensure => present,
+  }
+
+  
+	
+
+vi test.pp
+service { "ntp":
+  ensure => "running",
+}
+$variable = "Hi!"
+notify {"Message from elsewhere: $variable":}
+
+$apache_server = $operatingsystem ? {
+    Fedora  => "httpd",
+    Debian  => "apache2",
+}
+
+######################################################################################################################
+
+
+#######################################################################################################################
+puppet complies  manifests(puppet  code) in to catalog (either on puppet server or puppet apply) . 
+“catalog,” which only contains resources and hints about the order to sync them in.
+
+gem install puppet
+
+gem install puppet-module,  modules  & classes  , classes called in other  classes,
+
+Directory Environments vs. Config File Environments
+If directory environments are enabled, they will completely disable config file environments
+
+Environment Config Sections  main,  master,  agent,   user,  test , production  etc.
+sed "s/^ *import *'%_Environment_%'/  import 'envs\/${ENVIRONMENT}.pp'/" $site_template > $PUPPETDIR/manifests/site.pp &&
+##puppet apply  --verbose  --modulepath ${PUPPETDIR}/modules ${PUPPETDIR}/manifests/site.pp
+
+basemodulepath  ##   modules to be available to all environments.
+*nix (open source)	$confdir/modules:/usr/share/puppet/modules
+
+Checking the Modulepath
+You can view an environment’s effective modulepath by specifying the environment when requesting the setting value:
+
+$ sudo puppet config print modulepath --section master --environment test
+
+Assigning Nodes to Environments
+two ways to assign ,
+Via your ENC or node terminus  ##  read more  External Node Classifiers ,
+Via each agent node’s puppet.conf
+###################################################################################################################################
+
+Usage: puppet <subcommand> [options] <action> [options]
+
+Available subcommands, from Puppet Faces:
+  ca                Local Puppet Certificate Authority management.
+  catalog           Compile, save, view, and convert catalogs.
+  certificate       Provide access to the CA for certificate management.
+  certificate_request  Manage certificate requests.
+  certificate_revocation_list  Manage the list of revoked certificates.
+  config            Interact with Puppet's configuration options.
+  facts             Retrieve and store facts.
+  file              Retrieve and store files in a filebucket
+  help              Display Puppet help.
+  instrumentation_data  Manage instrumentation listener accumulated data.
+  instrumentation_listener  Manage instrumentation listeners.
+  instrumentation_probe  Manage instrumentation probes.
+  key               Create, save, and remove certificate keys.
+  man               Display Puppet manual pages.
+  node              View and manage node definitions.
+  parser            Interact directly with the parser.
+  plugin            Interact with the Puppet plugin system.
+  report            Create, display, and submit reports.
+  resource          API only: interact directly with resources via the RAL.
+  resource_type     View classes, defined resource types, and nodes from all manifests.
+  secret_agent      Mimics puppet agent.
+  status            View puppet server status.
+
+Available applications, soon to be ported to Faces:
+  agent             The puppet agent daemon
+  apply             Apply Puppet manifests locally
+  cert              Manage certificates and requests
+  describe          Display help about resource types
+  device            Manage remote network devices
+  doc               Generate Puppet documentation and references
+  filebucket        Store and retrieve files in a filebucket
+  inspect           Send an inspection report
+  kick              Remotely control puppet agent
+  master            The puppet master daemon
+  queue             Queuing daemon for asynchronous storeconfigs
+
+###################################################################################################################################
+puppet resource service
+Puppet Describe 
+puppet describe -l — List all of the resource types available on the system.
+puppet describe -s <TYPE> — Print short information about a type, without describing every attribute
+puppet describe <TYPE> — Print long information, similar to what appears in the type reference.
+puppet resource user root   ### Inspecting a single resource:
+Setting a new desired state for a resource:
+puppet resource user katie ensure=present shell="/bin/zsh" home="/home/katie" managehome=true
+
+###############Manifests ###################################################################################################################
+puppet apply /root/examples/user-absent.pp  ##Puppet programs are called “manifests,” and they use the .pp file extension.
+puppet agent --test --noop  ## dry run
+
+puppet apply  --configprint environment
+puppet config print modulepath 
+puppet config print modulepath  --environment test
+puppet config print all
+puppet apply -e 'notify { "$::osfamily/$::operatingsystem": }'
+puppet apply -e 'notice("$settings::modulepath, $settings::environment")'  ## differnet from puppet.conf  puppet config print modulepath
+cat /etc/environment
+puppet apply -e 'file { "/tmp/adhoc": content => "Written from puppet on $hostname\n" }
+ 
+Enabling Directory Environments  
+Directory environments are disabled by default. To enable them, you must:
+
+Set environmentpath = $confdir/environments in the puppet master’s puppet.conf (in the [master] or [main] section).
+
+sudo puppet config print modulepath
+#################################################################################################################################################
+class echo_class ($to_echo = "default value") {
+      notify {"What are we echoing? ${to_echo}.":}
+    }
+
+    class {'echo_class':
+      to_echo => 'Custom value',
+    }
+################################################################################################################################################# 
+class echo_class ($to_echo = "default value") {
+      notify {"What are we echoing? ${to_echo}.":}
+    }
+    class {'echo_class':
+      #to_echo => 'Custom value',
+    }
+####################
+
+class echo_class ($to_echo = "default value") {
+      notify {"What are we echoing? ${to_echo}.":}
+    }
+    class {'echo_class':
+      to_echo => 'Custom value',
+    }	
+################################################################################################################################################# 
+#### start a  service  & variable  use
+service { "ntp":
+  ensure => "running",
+}
+$variable = "Hi!"
+notify {"Message from elsewhere: $variable":}
+
+#### stop a  service  
+service { "ntp":
+  ensure => "stopped",
+}
+########install a package
+package { 'ntp' : ensure => installed, }
+
+########### node  variables 
+  $top_variable = "Available!"
+    node 'zabb1.home.lan' {
+      $variable = "Hi!"
+      notify {"Message from here: $variable":}
+      notify {"Top scope: $top_variable":}
+    }
+    notify {"Message from top scope: $variable":}
+
+###########  class  examples
+class scope_example {
+      File { ensure => directory, }
+
+      file {'/tmp/example':}
+    }
+
+    # /etc/puppet/manifests/site.pp
+    File {
+      ensure => file,
+      owner  => 'puppet',
+    }
+
+    include scope_example
+#########################################	
+$content = "some content\n"
+file {'/tmp/testing':
+      ensure  => file,
+      content => $content,
+    }
+########################################
+$variable = "Hi!"
+if $settings::environment == 'production' {
+      warning('Tried to include class ntp on virtual machine; this node may be misclassified.')
+    notify {"Message from top scope: $variable":}
+     }
+###############################################################################################
+$variable = "Hi hurrayyyyyy!"
+	if $::osfamily == 'Debian' {
+	warning('Tried to include .')
+    notify {"Message from top sce: $variable":}
+     }
+	 
+########################################
+http://rf.jiocloud.com/rf/login/login.aspx?ReturnUrl=%2frf	
+
+bring hosts in network , 	
+#################################################################################################################################################
+	
+to do  list
+early morning  onion massage, shadbindu & shirshaasan, go mutra , kapalbhati , anulom vilom 7 mins ,nail rubbing 20 mins,
+
+
+night apply oil massage,drink loky amla juice 
+
+
+
+#################################################################################################################################################
+open stack spice documentation,
+zabbix  document basi checks
+arrow@dcher0
+user santosh.y   9892 - 
+
+#################################################################################################################################################
+
+#################################################################################################################################################
+The first and foremost thing before beginning our manifest, is to configure our site.pp file on the puppet master, which is under 
+/etc/puppet/manifest/. Although we did create the site.pp when we were configuring puppet master for the first time, the file was kept empty.
+
+http://www.slashroot.in/puppet-tutorial-getting-started-puppet-manifests
+
+##########################################################################################################################################	
+Errors & resolutions
+puppet not configured to start, please edit /etc/default/puppet to enable put yes
+vi  /etc/default/puppet
+
+how to source a  file ?  a  file conf comes from master server ,below is an example from local
+## write a manifest 
+file { "/var/www/key.gpg":
+    ensure  => present,
+    source  => 'puppet:///files/app.txt',
+  }
+
+## set the  path of files  in  file  /etc/puppet/fileserver.conf
+[files]
+  path /etc/puppet/files
+  allow *
+
+ ### set the  authorization , we can set as many allow deny rules for ip's
+ path /file
+allow *
+
+
+
+##########################################################################################################################################	
+if $settings::environment == 'production' {
+      warning('Tried to include class ntp on virtual machine; this node may be misclassified.')
+    }
+##########################################################################################################################################	
+
+puppet module install puppetlabs-apache  ### in module path dir's  example /etc/puppet/modules
+#############  to install apache2with default values ##############
+class { 'apache':  }
+######  to install vhost  first.example.com#################
+class { 'apache': }
+apache::vhost { 'first.example.com':
+  port    => '80',
+  docroot => '/var/www/first',
+}
+
+##########################################################################################################################################	
+#### puppet  hiera  , a yaml look table for install time  params
+puppet resource package hiera ensure=installed  ## install hiera
+wget https://apt.puppetlabs.com/puppetlabs-release-precise.deb
+dpkg -i puppetlabs-release-precise.deb
+apt-get update
+hiera
+
+ln -s /etc/puppet/hiera.yaml /etc/hiera.yaml  ### create  soft link  /etc/hiera.yaml to  file  /etc/puppet/hiera.yaml
+cat /etc/puppet/hiera.yaml ####  create   file like  below
+---
+:backends:
+  - yaml
+:yaml:
+  :datadir: /etc/puppet/hieradata
+:hierarchy:
+  - "node/%{::fqdn}"
+  - common
+############# 
+mkdir /etc/puppet/hieradata/node  ## to keep node wise hiera data or look up data in yaml files ,example for hosts  grover.example.com &  kermit.example.com
+cat grover.example.com.yaml  ## below  code
+---
+ntp::restrict:
+  -
+ntp::autoupdate: true
+ntp::enable: true
+ntp::servers:
+  - kermit.example.com iburst
+  - 0.us.pool.ntp.org iburst
+  - 1.us.pool.ntp.org iburst
+  - 2.us.pool.ntp.org iburst
+  
+#################################
+
+cat kermit.example.com.yaml  ###  below  code
+---
+ntp::restrict:
+  -
+ntp::autoupdate: false
+ntp::enable: true
+ntp::servers:
+  - 0.us.pool.ntp.org iburst
+  - 1.us.pool.ntp.org iburst
+  - 2.us.pool.ntp.org iburst
+  - 3.us.pool.ntp.org iburst
+  
+#################################  
+## test    hiera  data  for  servers  grover.example.com  &  kermit.example.com  , should give below  output
+
+ hiera ntp::servers ::fqdn=grover.example.com
+["kermit.example.com iburst",
+ "0.us.pool.ntp.org iburst",
+ "1.us.pool.ntp.org iburst",
+ "2.us.pool.ntp.org iburst"]
+hiera ntp::servers ::fqdn=kermit.example.com
+["0.us.pool.ntp.org iburst",
+ "1.us.pool.ntp.org iburst",
+ "2.us.pool.ntp.org iburst",
+ "3.us.pool.ntp.org iburst"]
+ 
+######################## 
+
+
+
+
+ 
+ 
+ 
+##########################################################################################################################################	
+Directory Environments vs. Config File Environments
+##########################################################################################################################################	
+audit in puppet  ## record any change in resource (file etc) , once any change  happens on resource , puppet will capture and inform you
+####  example  of  auditing a  file  /etc/hosts   ####### 
+file {'hos':
+  ensure =>  file,
+   path => '/tmp/hos',
+   audit => [owner,mode],
+}
+
+
+##########################################################################################################################################
+## install module 
+ puppet-module install puppetlabs/stdlib
+ ls -ltr /etc/puppet/modules/stdlib
+ cd /etc/puppet/modules/stdlib
+  puppet apply tests/init.pp --noop
+## now below code will replace  any line like Server=* in file /tmp/abcd/eureka.txt , 
+with Server=10.135.35.60' & will not append on multiple runs or anything extra
+
+        file { '/tmp/abcd/eureka.txt':
+  ensure => present,
+}->
+file_line { 'Append a line to /tmp/eureka.txt':
+  path => '/tmp/abcd/eureka.txt',
+  line => 'Server=10.135.35.60',
+#  match   => "^Hello.*$",
+  match  => '^Server=.*$',
+}
+	 
+	 
+### to change many lines ,
+
+file_line { 'Append a line to /tmp/eureka.txt':
+  path => '/tmp/abcd/zabbix_agentd.conf',
+  line => 'Server=10.135.35.60',
+#  match   => "^Hello.*$",
+  match  => '^Server=.*$',
+}
+
+file_line { 'Append a line to for ServerActive':
+  path => '/tmp/abcd/zabbix_agentd.conf',
+  line => 'ServerActive=10.135.35.60',
+#  match   => "^Hello.*$",
+  match  => '^ServerActive=.*$',
+}
+
+   	 
+###################################################################################################################################################
+
+apt-get install puppet puppetmaster facter rubygems
+gem install puppet-module
+cd /etc/puppet/modules
+puppet agent --test
+puppet module list 
+puppet module search apache
+puppet module uninstall puppetlabs-apache
+puppet module upgrade puppetlabs-apache --version 0.0.3
+###Installing From the Puppet Forge
+puppet module install puppetlabs-apache
+###Installing From Another Module Repository
+puppet module install --module_repository http://dev-forge.example.com puppetlabs-apache
+###Installing From a Release Tarball
+puppet module install ~/puppetlabs-apache-0.10.0.tar.gz --ignore-dependencies
+
+	 
+###################################################################################################################################################
+How  to write a  puppet module  ###
+create a  file like  below  ##
+/etc/puppet/modules/wwwdir/manifests/init.pp
+class wwwdir {
+        file{ '/var/www':
+      ensure=>'directory',
+      owner=>'www-data',
+      group=>'www-data',
+      mode=>'664',
+  }
+}
+
+&   call this file  like  below
+puppet apply  -e "include wwwdir"
+### final commands
+puppet module install puppetlabs-inifile
+puppet module install softek-zabbixagent
+puppet apply  -e "include zabbixagent"  ### give  hostname & servers , other wise zabbix will not start
+puppet apply  /tmp/practice/filea.pp
+cat /tmp/practice/filea.pp  ### file contents
+include zabbixagent
+## or  to include  hostname & zabbix  ip use file like  below ,
+class { 'zabbixagent':
+  servers  => 'zabbix.example.com', # Optional: defaults to localhost (accepts an array)
+  hostname => 'web01.example.com' # Optional: defaults to the fully qualified domain name of the machine
+}
+include zabbixagent
+######
+
+
+ 
+zabbix agent , service , file , conf lines in file , ensure ,
+mysql, zabbix server , apache2
+
+###################################################################################################################################################
+puppet apply  -e "include apache"
+###################################################################################################################################################	 
+https://forge.puppetlabs.com/wdijkerman/zabbix#module-description
+https://github.com/express42/zabbixapi
+apt get install fabric
+
+list all classes of  puppet 
+find / -name '*.pp' -exec awk '/^class [a-zA-Z]/ {print $2}' {} \;
+###################################################################################################################################################	 
+puppet  resource  user anshu
+puppet  resource  service networking
+puppet  describe -l  ### list all resources  types
+puppet  resource package  ### list all resource of type package
+enusre => file  
+enusre => dir
+enusre => link
+enusre => present
+check this  /etc/puppetlabs/puppet/manifests/site.pp.  master/agent   catalog
+####  to  express  relation ships in  resources puppet usages,
+before
+require
+notify
+subscribe
+puppet management console , puppet coding stds
+
+jiodrive  templates , rfprod, bug closed , OS install, hadoop (hive pig etc)
+#############################################################################################################################################
+class system::zabbix {
+  # Install the required packages
+  package { "zabbix": ensure => installed }
+  package { "zabbix-agent": ensure => installed }
+
+  # Replace the default config
+  exec { "Remove the original zabbix agent config":
+    command => "rm /etc/zabbix/zabbix_agentd.conf",
+    onlyif  => "grep -c 'Hostname=Zabbix server' /etc/zabbix/zabbix_agentd.conf",
+  }->
+  file { "/etc/zabbix/zabbix_agentd.conf":
+    source  => "puppet:///modules/system/etc/zabbix/zabbix_agentd.conf",
+    owner   => "root",
+    group   => "root",
+    mode    => "644",
+    ensure  => "present",
+    replace => false, # Only create this file if it doesn't exist
+  }->
+  file_line { "Update ois zabbix agent config":
+    line    => "Hostname=$hostname",
+    path    => "/etc/zabbix/zabbix_agentd.conf",
+    match   => "^Hostname=.*$",
+    ensure  => present, # Restart the Zabbix agent if updated
+    notify  => Service["zabbix-agent"],
+  }
+
+  # Enable the port for zabbix agent
+  firewall { '202 allow communication with zabbix server':
+    port    => [10050],
+    proto   => tcp,
+    action  => accept,
+  }
+### or  better rules are for zabbix-agent port 10050 
+firewall { '10050  allow zabbix-agent access':
+    port   => [10050],
+    proto  => "tcp",
+    action => "accept",
+ }
+firewall { '10050  open port 111':
+    dport => 10050
+  }
+
+
+  
+  
+  # Start the zabbix agent
+  service { 'zabbix-agent':
+    ensure  => 'running',
+    enable  => true,
+    require => Package["zabbix-agent"],
+  }
+}
+
+###########################################################################################################################
+######### Restart a service  , after file  being  changed
+class system::ssh-service {
+  # Install the required packages
+  package { "openssh-server": ensure => installed }
+  package { "openssh-client": ensure => installed }
+ 
+  # Synchronize the sshd_config
+  file { "/etc/ssh/sshd_config":
+    mode    => 600,
+    owner   => "root",
+    group   => "root",
+    require => Package["openssh-server"],
+    notify  => Service["sshd"], # Restart ssh server if being updated
+  }
+ 
+  # Ensure the ssh server is running
+  service { "sshd":
+    ensure  => "running",
+    enable  => "true",
+    require => Package["openssh-server"],
+  }
+}
+###########PUPPET – EXEC ONLY IF A CERTAIN CONDITION IS TRUE
+# run exec only if command in onlyif returns 0.
+exec { "run_account_purger":
+  command => "/usr/local/sbin/account_purger",
+  onlyif => "grep -c old_account /etc/passwd",
+}
+ 
+# or run multiple commands - all must succeed for exec to run
+exec { "run_account_purger":
+  command => "/usr/local/sbin/account_purger",
+  onlyif => [ 
+              "grep -c old_account /etc/passwd", 
+              "test -d /home/old_account/"
+            ],
+}
+
+
+#####Add a string
+file { '/tmp/eureka.txt':
+  ensure => present,
+}->
+file_line { 'Append a line to /tmp/eureka.txt':
+  path => '/tmp/eureka.txt',  
+  line => 'Hello World',
+}
+
+
+###### Replace a string
+
+file { '/tmp/eureka.txt':
+  ensure => present,
+}->
+file_line { 'Append a line to /tmp/eureka.txt':
+  path => '/tmp/eureka.txt',  
+  line => 'Hello Eureka',
+  match   => "^Hello.*$",
+}
+
+
+##############################################################################################################################################
+
+RHEL  - >   master  agent (zabbix agent package , file , only if lines in file , service , only if firewall rules  )
+Logstatsh doc , zabbix volume doc, mechanize gmail doc
+
+gem install puppet-module
+
+##############################################################################################################################################  
+firewall
+https://sysadmincasts.com/episodes/18-managing-iptables-with-puppet
+puppet module install puppetlabs-firewall
+
+then create file as below in a new module  my_fw
+
+file /etc/puppet/modules/my_fw/manifests/init.pp
+class my_fw {
+    resources { "firewall":
+        purge => true
+    }
+    Firewall {
+        before  => Class['my_fw::post'],
+        require => Class['my_fw::pre'],
+    }
+    class { ['my_fw::pre', 'my_fw::post']: }
+    class { 'firewall': }
+}
+
+file /etc/puppet/modules/my_fw/manifests/pre.pp
+class my_fw::pre {
+  Firewall {
+    require => undef,
+  }
+
+  # Default firewall rules
+  firewall { '000 accept all icmp':
+    proto   => 'icmp',
+    action  => 'accept',
+  }->
+  firewall { '001 accept all to lo interface':
+    proto   => 'all',
+    iniface => 'lo',
+    action  => 'accept',
+  }->
+  firewall { '002 accept related established rules':
+    proto   => 'all',
+    state   => ['RELATED', 'ESTABLISHED'],
+    action  => 'accept',
+  }->
+  firewall { '003 allow SSH access':
+    port   => 22,
+    proto  => tcp,
+    action => accept,
+  }
+}
+
+
+file /etc/puppet/modules/my_fw/manifests/post.pp
+
+class my_fw::post {
+  firewall { '999 drop all':
+    proto   => 'all',
+    action  => 'drop',
+    before  => undef,
+  }
+}
+
+
+######################################################################################################################################
+
+firewall { "000 accept all icmp requests":
+  proto  => "icmp",
+  action => "drop",
+}
+
+#### delete all rules ,
+ resources { "firewall":
+    purge   => true
+  }
+  
+firewall { '100 allow http and https access':
+    port   => [80, 443],
+    proto  => tcp,
+    action => allow,
+  }
+  
+firewall { '100 allow http and https access':
+    port   => [80, 443],
+    proto  => tcp,
+    action => drop,
+  }
+
+
+firewall { "000 drop all icmp requests":
+  proto  => "icmp",
+  action => "drop",
+}
+
+##########################################################################################################################################
+apply through a  module , 
+/etc/puppet/modules/wwwdir/manifests/init.pp
+
+class wwwdir {
+
+ resources { "firewall":
+    purge   => true
+  }
+
+file{ '/var/www':
+      ensure=>'directory',
+      owner=>'www-data',
+      group=>'www-data',
+      mode=>'664',
+  }
+}
+##########################################################################################################################################
+apt-get install iptables-persistent
+cat /etc/iptables/rules.v4
+
+##########################################################################################################################################
+
+#######################################
+
+issue_deprecation_warning issue on master   /etc/puppet/puppet.conf  comment below line
+#templatedir=$confdir/templates
+
+########################################
+##  in file  /etc/puppet/puppet.conf  on agent 
+[agent]
+server = pmaster
+report = true
+pluginsync = true
+certname = puppets
+
+#########################################
+if   lists no certficates
+puppet cert --list  ###
+puppet cert --all --list   ###
+
+puppet cert clean --all  ## master
+
+rm -rf /var/lib/puppet/ssl   ### on puppet agent
+rm -rf /var/lib/puppet/ssl/certificate_requests/*   ### on puppet master
+
+##  now run below command  on agent
+## error  Exiting; no certificate found and waitforcert is disabled , means puppet master already has cert & it just needs to sign it, run
+puppet cert --list  ### on master server
+
+###  for  a  new  cert sign request
+
+puppet agent -t  ## on puppet agent
+puppet cert --list  ### on puppet server  to list cert
+puppet cert --sign "puppets"    ### on puppet server , to sign agent , puppets is agent server name
+puppet agent --test  ### to install catalog from server
+puppet agent --enable
+
+if some mess up happens ,
+Error: Could not request certificate: The certificate retrieved from the master does not match the agent's private key.
+Certificate fingerprint: 36:BC:C0:57:12:1A:CC:A5:B7:FB:95:AB:80:A0:23:D1:C2:9D:8A:B5:73:E1:31:F4:B2:F7:49:E9:87:13:6B:35
+To fix this, remove the certificate from both the master and the agent and then start a puppet run, which will automatically regenerate a certficate.
+On the master:
+  puppet cert clean app-server1
+On the agent:
+  1a. On most platforms: find /var/lib/puppet/ssl -name app-server1.pem -delete
+  1b. On Windows: del "/var/lib/puppet/ssl/app-server1.pem" /f
+  2. puppet agent -t
+  
+  
+  
+##################################################################################################################################
+rm -rf /var/lib/puppet/ssl*
+
+On the client, delete all stored certs, including the CA:
+
+find /var/lib/puppet/ssl -name '*.pem' -exec rm {} \;
+On the master, delete any pending CSRs or old client certificates for this client:
+
+find /var/lib/puppet/ssl -name agenthost.domain.com.pem -exec rm {} \;
+
+Then, on the client, reconnect to the master and send a CSR:
+
+revoke rm -rf   /var/lib/puppet/ssl* on agent , master , on master    puppet cert clean clientname
+
+stop puppet agent on client & puppet agent -t
+  
+
+##########################################################################################################################################
+site.pp  for mysql install
+node [hostname of Puppet client] {
+class { 'mysql': }
+class { 'mysql::server':
+   config_hash => { 'root_password' => '[desired password]' }
+}
+}
+###############################################################################################################################################
+puppet parser validate  /etc/puppet/manifests/site.pp
+gem install  puppet-lint
+puppet-lint  /etc/puppet/manifests/site.pp
+rake lint
+
+docs.puppetlabs.com/guides/styleguides
+
+classes & defined types
+
+/etc/puppet/   modules/module_name/manifests/init.pp  files  etc &     /etc/puppet/manifests  modules.pp , nodes.pp , site.pp
+
+
+##############################################################################################################################################
+first install modules in cd /etc/puppet/modules on puppet master node .
+
+puppet master  to puppet node  flow for advanced setting code  ,  http://projects.puppetlabs.com/projects/1/wiki/advanced_puppet_pattern
+
+cat  /etc/puppet/manifests/modules.pp
+import "nodes"
+
+
+cat /etc/puppet/manifests/site.pp
+import "nodes"
+
+/etc/puppet/manifests/nodes.pp
+
+node 'puppets' {
+#   include apache2
+
+#include zabbixagent  ### use belwo line  class { 'zabbixagent':  , for advance settings
+
+
+class { 'zabbixagent':
+  servers  => 'zabbix.example.com', # Optional: defaults to localhost (accepts an array)
+  hostname => 'web01.example.com' # Optional: defaults to the fully qualified domain name of the machine
+}
+
+firewall { "000 drop all icmp requests":
+  proto  => "icmp",
+  action => "drop",
+}
+
+firewall { '10050  allow zabbix-agent access':
+    port   => [10050],
+    proto  => "tcp",
+    action => "accept",
+ }
+firewall { '10050  open port 111':
+    dport => 10050
+  }
+
+  
+file { "/tmp/hello-file":
+    replace => "no", # this is the important property
+    ensure  => "present",
+    content => "From Puppet\n",
+    mode    => 644,
+}
+
+}
+
+node 'puppetb' {
+
+}
+#######################
+
+enusre if not ,  enusre running if stopped , ensure version ,
+
+###################################################################################################################################################
+node 'logagent' {
+#   include apache2
+
+#include zabbixagent  ### use below line  class { 'zabbixagent':  , for advance settings
+
+
+class { 'zabbixagent':
+  servers  => 'zabbix.example.com', # Optional: defaults to localhost (accepts an array)
+  hostname => 'web01.example.com' # Optional: defaults to the fully qualified domain name of the machine
+}
+
+firewall { "000 drop all icmp requests":
+  proto  => "icmp",
+  action => "accept",
+}
+### rules for zabbix-agent port 10050
+firewall { '10050  allow zabbix-agent access':
+    port   => [10050],
+    proto  => "tcp",
+    action => "accept",
+ }
+firewall { '10050  open port 111':
+    dport => 10050
+  }
+
+
+
+file { "/tmp/hello-file":
+    replace => "no", # this is the important property
+    ensure  => "present",
+    content => "From Puppet\n",
+    mode    => 644,
+}
+file {'/etc/zabbix/zabbix_agentd.conf':  #Path to file on the client we want puppet to administer
+     ensure  => file,  #Ensure it is a file,
+     mode => 0644,    #Permissions for the file
+     source => 'puppet:///modules/', #Path to our customised file on the puppet server
+     }
+
+service { 'zabbix-agent':
+      ensure     => running,
+      enable     => true,
+      subscribe => File['/etc/zabbix/zabbix_agentd.conf']  # Restart service if any any change is made to httpd.conf
+}
+}
+          
+###apt-cache policy zabbix-agent		  
+
+########################################################################################################################################
+
+ 1000  cat /etc/redhat-release
+ 1001  sudo rpm -ivh http://yum.puppetlabs.com/puppetlabs-release-el-6.noarch.rpm
+ 1002  cat /etc/yum.repos.d/puppetlabs.repo
+ 1003  vi /etc/yum.repos.d/puppetlabs.repo
+ 1004  yum install puppet
+ 1005  puppet -V
+
+########################################################################################################################################
+
+class system::zabbix {
+  # Install the required packages
+  package { "zabbix": ensure => installed }
+  package { "zabbix-agent": ensure => installed }
+ 
+  # Replace the default config
+  exec { "Remove the original zabbix agent config":
+    command => "rm /etc/zabbix/zabbix_agentd.conf",
+    onlyif  => "grep -c 'Hostname=Zabbix server' /etc/zabbix/zabbix_agentd.conf",
+  }->
+  file { "/etc/zabbix/zabbix_agentd.conf":
+    source  => "puppet:///modules/system/etc/zabbix/zabbix_agentd.conf",
+    owner   => "root",
+    group   => "root",
+    mode    => "644",
+    ensure  => "present",
+    replace => false, # Only create this file if it doesn't exist
+  }->
+  file_line { "Update ois zabbix agent config":
+    line    => "Hostname=$hostname",
+    path    => "/etc/zabbix/zabbix_agentd.conf",
+    match   => "^Hostname=.*$",
+    ensure  => present, # Restart the Zabbix agent if updated
+    notify  => Service["zabbix-agent"],
+  }
+ 
+  # Enable the port for zabbix agent
+  firewall { '202 allow communication with zabbix server':
+    port    => [10050],
+    proto   => tcp,
+    action  => accept,
+  }
+ 
+  # Start the zabbix agent
+  service { 'zabbix-agent':
+    ensure  => 'running',
+    enable  => true,
+    require => Package["zabbix-agent"],
+  }
+}
+#####################################################################################################################################
+puppet  file  source  , copy from non-module  dir's
+Note: Put files in path  example source  => "puppet:///files/zabbix-app-server1", 
+chown puppet:puppet   path /etc/puppet/files  dir
+
+[files]
+  path /etc/puppet/files
+  allow *
+
+
+file { "/tmp/zabbix_agentd.conf":
+    source  => "puppet:///files/zabbix-app-server1",
+    owner   => "root",
+    group   => "root",
+    mode    => "644",
+    ensure  => "present",
+    replace => false, # Only create this file if it doesn't exist
+  }
+ 
+ 
+############################################################################################################################################# 
+
+ package { "zabbix": ensure => installed }
+  package { "zabbix-agent": ensure => installed }
+  service { 'zabbix-agent':
+    ensure  => 'running',
+    enable  => true,
+    require => Package["zabbix-agent"],
+  }
+  
+ # Replace the default config
+  exec { "Remove the original zabbix agent config":
+    command => "rm /etc/zabbix/zabbix_agentd.conf",
+    onlyif  => "grep -c 'Hostname=Zabbix server' /etc/zabbix/zabbix_agentd.conf",
+  }->
+  file { "/etc/zabbix/zabbix_agentd.conf":
+    source  => "puppet:///modules/system/etc/zabbix/zabbix_agentd.conf",
+    owner   => "root",
+    group   => "root",
+    mode    => "644",
+    ensure  => "present",
+    replace => false, # Only create this file if it doesn't exist
+  }->
+  file_line { "Update ois zabbix agent config":
+    line    => "Hostname=$hostname",
+    path    => "/etc/zabbix/zabbix_agentd.conf",
+    match   => "^Hostname=.*$",
+    ensure  => present, # Restart the Zabbix agent if updated
+    notify  => Service["zabbix-agent"],
+  } 
+  # Start the zabbix agent
+  service { 'zabbix-agent':
+    ensure  => 'running',
+    enable  => true,
+    require => Package["zabbix-agent"],
+  }
+  
+  
+###################################
+exec { "Remove the original zabbix agent config":
+    command => "rm /etc/zabbix/zabbix_agentd.conf",
+    onlyif  => "grep -c 'Hostname=Zabbix server' /etc/zabbix/zabbix_agentd.conf",
+  }->  file { "/etc/zabbix/zabbix_agentd.conf":
+    source  => "puppet:///files/zabbix-app-server1",
+    owner   => "root",
+    group   => "root",
+    mode    => "644",
+    ensure  => "present",
+    replace => false, # Only create this file if it doesn't exist
+  }-> file_line { "Update ois zabbix agent config":
+    line    => "Hostname=$hostname",
+    path    => "/etc/zabbix/zabbix_agentd.conf",
+    match   => "^Hostname=.*$",
+    ensure  => present, # Restart the Zabbix agent if updated
+    notify  => Service["zabbix-agent"],
+  }
+
+#####################################################################################################################################
+
+  package { "zabbix-agent": ensure => installed }
+
+  service { 'zabbix-agent':
+    ensure  => 'running',
+    enable  => true,
+    require => Package["zabbix-agent"],
+  }
+
+file { "/etc/zabbix/zabbix_agentd.conf":
+    source  => "puppet:///files/zabbix-app-server1",
+    owner   => "root",
+    group   => "root",
+    mode    => "644",
+    ensure  => "present",
+    notify  => Service["zabbix-agent"]
+#    replace => false, # Only create this file if it doesn't exist
+  }
+
+#####################################################################################################################################  
+  
+file { "/etc/zabbix/zabbix_agentd.conf":
+     source  => "puppet:///files/zabbix-app-server1",
+    owner   => "root",
+    group   => "root",
+    mode    => "644",
+    ensure  => "present",
+    notify  => Service["zabbix-agent"]
+   replace => false, # Only create this file if it doesn't exist
+  }
+  
+##################################################################################################################################################
+  $servers = '',
+  $hostname = '',
+) {
+  $servers_real = $servers ? {
+    ''      => 'localhost',
+    default => $servers,
+  }
+  $hostname_real = $hostname ? {
+    ''      => $::fqdn,
+    default => $hostname,
+  }
+
+  Package <| |> -> Ini_setting <| |>
+
+   ini_setting { 'servers setting':
+        ensure  => present,
+        path    => '/etc/zabbix/zabbix_agentd.conf',
+        section => '',
+        setting => 'Server',
+        value   => join(flatten([$servers_real]), ','),
+        notify  => Service['zabbix-agent'],
+      }
+
+      ini_setting { 'hostname setting':
+        ensure  => present,
+        path    => '/etc/zabbix/zabbix_agentd.conf',
+        section => '',
+        setting => 'Hostname',
+        value   => $hostname_real,
+        notify  => Service['zabbix-agent'],
+      }
+
+ ini_setting { 'Include setting':
+        ensure  => present,
+        path    => '/etc/zabbix/zabbix_agentd.conf',
+        section => '',
+        setting => 'Include',
+        value   => '/etc/zabbix/zabbix_agentd/',
+        notify  => Service['zabbix-agent'],
+      }
+  file { '/etc/zabbix/zabbix_agentd':
+        ensure  => directory,
+        require => Package['zabbix-agent'],
+      }
+	  
+   
+####################################################################################################################################################
+yumrepo { "zabbix2.4":
+baseurl => "http://repo.zabbix.com/zabbix/2.4/rhel/6/x86_64/",
+descr => "myzabbix2.4",
+enabled => 1,
+gpgcheck => 0,
+}
+
+####################################################################################################################################################
+rpm -ivh http://yum.puppetlabs.com/puppetlabs-release-el-6.noarch.rpm
+yum install puppet
+
+
+
+#####################################################################################################################################################
+[root@ip-172-31-23-61 ~]# cat /etc/zabbix/zabbix_agentd.conf | grep -v "^#"  |sed  '/^$/d'
+PidFile=/var/run/zabbix/zabbix_agentd.pid
+LogFile=/var/log/zabbix/zabbix_agentd.log
+LogFileSize=0
+DebugLevel=2
+Server=172.31.5.161
+ListenPort=10050
+ServerActive=172.31.5.161
+Hostname=ds-server1
+Include=/etc/zabbix/zabbix_agentd.d/
+
+####################################################################################################################################################
+node 'ds-server1' {
+
+
+class { 'zabbixagentt':
+  servers  => '172.31.5.161', # Optional: defaults to localhost (accepts an array)
+  sa => '172.31.5.161',
+  hostname => 'ds-server1' # Optional: defaults to the fully qualified domain name of the machine
+}
+
+
+yumrepo { "zabbix2.4":
+baseurl => "http://repo.zabbix.com/zabbix/2.4/rhel/6/x86_64/",
+descr => "myzabbix2.4",
+enabled => 1,
+gpgcheck => 0,
+}
+
+####################################################################################################################################################
+Error: Could not request certificate: getaddrinfo: No such host is known
+puppet agent -t --debug --verbose  --server puppetmaster
+puppet agent -t --server puppetmaster 
+
+########################################################################################################################################
+http://www.xenuser.org/open-source-development/managing-apt-sources-lists-with-puppet/
+include apt
+apt::source { "puppetlabs_precise":
+location        => "http://apt.puppetlabs.com/",
+release         => "precise",
+repos           => " main",
+include_src     => false
+}
+########################################################################################################################################
+file_line { 'debian_package':
+    path => '/etc/apt/sources.list',
+    line => 'deb http://repos.zend.com/zend-server/deb server non-free'
+}
+
+exec { "wget http://repos.zend.com/zend.key -O- |apt-key add -":
+    path => ["/usr/bin", "/usr/sbin"]
+}
+
+exec { "apt-get update":
+    command => "/usr/bin/apt-get update",
+    onlyif => "/bin/sh -c '[ ! -f /var/cache/apt/pkgcache.bin ] || /usr/bin/find /etc/apt/* -cnewer /var/cache/apt/pkgcache.bin | /bin/grep . > /dev/null'",
+}
+
+    package { "zend-server-ce-php-5.2":
+       ensure => "latest"
+}
+
+
+
+package { "zend-server-ce-php-5.2":
+  ensure  => latest,
+  require  => Exec['apt-get update'],
+}
+
+
+include apt
+
+apt::source { "puppetlabs_precise":
+        location        => "http://apt.puppetlabs.com/",
+        release         => "precise",
+        repos           => " main",
+        include_src     => false
+}
+
+apt::source { "ubuntu_archiv_precise":
+        location        => "http://archive.ubuntu.com/",
+        release         => "precise",
+        repos           => "main restricted universe multiverse",
+        include_src     => false
+}
+
+
+apt::source { 'sun_java':
+location => "http://security.debian.org/",
+release => "squeeze/update",
+repos => "main non-free",
+include_src => true,
+}
+
+apt::source { 'sun_java2':
+location => "http://mirrors.kernel.org/debian/",
+repos => "main non-free",
+include_src => true,
+}
+
+###########################################################################################################################################################
+
+puppet apply  test.pp
+
+test.pp
+
+$content = "some content\n"
+file {'/tmp/testing':
+      ensure  => file,
+      content => $content,
+    }
+
+
+http://www.puppetcookbook.com/
+
+
+###########################################################################################################################################################
+puppet master agent set up,
+mysql -N -h '10.135.83.230'  --user='ipam' --password='ril@1234' --database='phpipam' --execute='select  ip_addr  from  ipaddresses;'  >floatingipint
+for i in `cat floatingipint`; do /root/bashint2ip.sh $i; done >>floatingip_b
+
+
+
+nova   --insecure  --os-tenant-name='CRM'  list |  awk '{print $(NF-1)}' |grep 10.135 >floatingip
+nova   --insecure  --os-tenant-name='Consumer cloud devops'  list |  awk '{print $(NF-1)} ' |grep 10.135  >>floatingip
+nova   --insecure  --os-tenant-name='SwitchNWalk Project'  list |  awk '{print $(NF-1)}' |grep 10.135  >>floatingip
+nova   --insecure  --os-tenant-name='JioDrive Gateway - Production'  list |  awk '{print $(NF-1)}' |grep 10.135  >>floatingip
+nova   --insecure  --os-tenant-name='JioDrive Gateway - SIT and Prepod'  list |  awk '{print $(NF-1)}' |grep 10.135 >>floatingip
+nova   --insecure  --os-tenant-name='Software Eng.'  list |  awk '{print $(NF-1)}' |grep 10.135 >>floatingip
+nova   --insecure  --os-tenant-name='TejDevelopment'  list |  awk '{print $(NF-1)}' |grep 10.135 >>floatingip
+nova   --insecure  --os-tenant-name='JIO Drive QA'  list |  awk '{print $(NF-1)}' |grep 10.135 >>floatingip
+nova   --insecure  --os-tenant-name='Conscloud'  list |  awk '{print $(NF-1)}' |grep 10.135 >>floatingip
+nova   --insecure  --os-tenant-name='Consumer cloud devops'  list |  awk '{print $(NF-1)}' |grep 10.135 >>floatingip
+nova   --insecure  --os-tenant-name='ACS - Production'  list|  awk '{print $(NF-1)}' |grep 10.135 >>floatingip
+
+
+/root/difff.py |sed  '/^$/d' |grep 10.135.8 >iplist
+
+
+
+for i in `cat iplist`; do /root/baship2int.sh $i; done >>newips
+
+IPADD='176640259'
+mysql -N -h '10.135.83.230'  --user='ipam' --password='ril@1234' --database='phpipam' --execute="select  dns_name,ip_addr  from  ipaddresses where ip_addr='${IPADD}';"
+
+select * from  ipaddresses where ip_addr=176640259;
+
+
+mysql -N -h '10.135.83.230'  --user='ipam' --password='ril@1234' --database='phpipam' --execute='select  ip_addr  from  ipaddresses;'
+
+UPDATED=`20081029144522`
+mysql --user=myuser --password=mypass MyDB -e "SELECT Updated FROM OrderSummary_LastUpdate WHERE Updated='${UPDATED}';"
+
+#!/bin/bash
+#
+UPDATED=`176641003`
+mysql -N -h '10.135.83.230'  --user='ipam' --password='ril@1234' --database='phpipam' --execute="select * from  ipaddresses where ip_addr='${UPDATED}';"
+
+
+
+wget https://apt.puppetlabs.com/puppetlabs-release-trusty.deb
+dpkg -i puppetlabs-release-trusty.deb
+apt-get update
+apt-get install puppetmaster
+puppet -V
+
+##  in file  /etc/puppet/puppet.conf  on master
+
+[main]
+logdir=/var/log/puppet
+vardir=/var/lib/puppet
+ssldir=/var/lib/puppet/ssl
+rundir=/var/run/puppet
+factpath=$vardir/lib/facter
+#templatedir=$confdir/templates
+
+[master]
+# These are needed when the puppetmaster is run by passenger
+# and can safely be removed if webrick is used.
+ssl_client_header = SSL_CLIENT_S_DN
+ssl_client_verify_header = SSL_CLIENT_VERIFY
+
+
+
+##  in file  /etc/puppet/puppet.conf  on agent 
+[agent]
+server = pmaster
+report = true
+pluginsync = true
+certname = puppets
+
+vi /etc/hosts
+10.0.0.39   pmaster
+
+vi /etc/default/puppet
+START=yes
+
+service puppet start  ## on agent 
+puppet cert list   ### on server
+puppet cert sign puppets
+
+### to check signed  certs , on server
+
+puppet cert list -all
+
+puppet agent --fingerprint  ### on agent , To view the client cert fingerprint
+
+puppet cert clean puppets   ### to revoke a  cert
+puppet cert -c     ### to clean the certs
+
+
+puppet server hostname must be  same as agents puppet conf file & /etc/hosts file
+ping -c 3 pmaster      ### check with ping ,ping to puppet master
+
+
+
+cat /etc/hosts
+127.0.0.1       localhost
+127.0.1.1       pmaster
+
+10.0.0.39 pmaster
+
+hostname   ## puppet master hostname , must be same
+pmaster
+
+
+now  set 3 files in puppet master as below ,
+
+
+cat  /etc/puppet/manifests/modules.pp
+import "nodes"
+
+
+cat /etc/puppet/manifests/site.pp
+import "nodes"
+
+cat /etc/puppet/manifests/nodes.pp
+
+node 'puppets' {
+
+$content = "some content\n"
+file {'/tmp/testing':
+      ensure  => file,
+      content => $content,
+    }
+}
+
+
+## now exec below command
+puppet agent -t     ### this must  create file  /tmp/testing 
+
+
+
+
+
+###########################################################################################################################################################
+
+###########################################################################################################################################################
